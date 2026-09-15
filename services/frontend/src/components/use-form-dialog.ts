@@ -3,6 +3,8 @@
 import { startTransition, useActionState, useRef, type FormEvent } from "react";
 import type { SaveState } from "@/lib/session";
 
+const UPLOAD_FAILED = "Unable to save. If you attached an image, make sure it is 10MB or smaller.";
+
 /**
  * Shared behaviour for the add/edit modals: a native <dialog>, a form that
  * keeps its input when a save fails, and closing + resetting on success.
@@ -17,8 +19,9 @@ export function useFormDialog(save: (prev: SaveState, formData: FormData) => Pro
     onReset?.();
   };
 
-  const [state, action, pending] = useActionState(async (prev: SaveState, formData: FormData) => {
-    const result = await save(prev, formData);
+  const [state, action, pending] = useActionState(async (prev: SaveState, formData: FormData): Promise<SaveState> => {
+    // A request rejected before reaching the server action (e.g. 413 body too large) throws here.
+    const result: SaveState = await save(prev, formData).catch(() => ({ errors: [UPLOAD_FAILED] }));
     if (result?.ok) close();
     return result;
   }, undefined);
