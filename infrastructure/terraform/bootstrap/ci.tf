@@ -8,6 +8,14 @@ variable "github_repo" {
   default     = "Iriajul/Medioso-perfume"
 }
 
+# GitHub issues OIDC subjects with immutable owner/repo IDs for this repo
+# (see: gh api repos/<owner>/<repo>/actions/oidc/customization/sub).
+variable "github_sub_prefix" {
+  description = "OIDC `sub` claim prefix for github_repo"
+  type        = string
+  default     = "repo:Iriajul@184420729/Medioso-perfume@1370892539"
+}
+
 variable "github_branches" {
   description = "Branches allowed to assume the CI role (used by build jobs)"
   type        = list(string)
@@ -55,8 +63,8 @@ data "aws_iam_policy_document" "ci_assume" {
       test     = "StringLike"
       variable = "token.actions.githubusercontent.com:sub"
       values = concat(
-        [for b in var.github_branches : "repo:${var.github_repo}:ref:refs/heads/${b}"],
-        [for e in var.github_environments : "repo:${var.github_repo}:environment:${e}"]
+        [for b in var.github_branches : "${var.github_sub_prefix}:ref:refs/heads/${b}"],
+        [for e in var.github_environments : "${var.github_sub_prefix}:environment:${e}"]
       )
     }
   }
