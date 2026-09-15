@@ -1,8 +1,8 @@
 ---
 # ─── Role: app-deploy ─────────────────────────────────────────────────
 # Mirrors the repo's deployment/ subtree onto the server (base compose +
-# env override + per-service .env files), then brings the stack up via the
-# handler. The subtree layout means the relative paths inside the compose
+# env override + per-service .env files), then deploys with the same
+# server-deploy.sh that CI runs over SSM, so every run ends with a healthy stack. The subtree layout means the relative paths inside the compose
 # files (e.g. ../environments/.env.production.backend) resolve correctly.
 
 - name: Create project directory
@@ -31,7 +31,6 @@
     mode: '0644'
     owner: ubuntu
     group: ubuntu
-  notify: restart docker compose
 
 - name: "Copy {{ env }} docker-compose override"
   copy:
@@ -40,7 +39,6 @@
     mode: '0644'
     owner: ubuntu
     group: ubuntu
-  notify: restart docker compose
 
 - name: Copy service .env files to server
   copy:
@@ -52,7 +50,6 @@
   loop:
     - backend
     - frontend
-  notify: restart docker compose
 
 - name: Write the Compose runtime environment
   # Interpolation-only values for the compose files. App secrets live in the
@@ -66,7 +63,6 @@
     mode: '0600'
     owner: ubuntu
     group: ubuntu
-  notify: restart docker compose
 
 - name: Copy on-box deploy script (invoked by CI via SSM)
   copy:
@@ -75,3 +71,20 @@
     mode: '0755'
     owner: ubuntu
     group: ubuntu
+
+- name: Require an ECR registry for the deploy
+  assert:
+    that: ecr_registry | length > 0
+    fail_msg: "Set REGISTRY=<account>.dkr.ecr.<region>.amazonaws.com when running the playbook."
+
+- name: Deploy the stack (pull images, recreate containers, wait for health)
+  command: bash {{ project_path }}/server-deploy.sh
+  args:
+    chdir: "{{ project_path }}"
+  become_user: ubuntu
+  environment:
+    DEPLOY_ENV: "{{ env }}"
+    REGISTRY: "{{ ecr_registry }}"
+    IMAGE_TAG: "{{ image_tag }}"
+    AWS_REGION: "{{ aws_region }}"
+  changed_when: true
