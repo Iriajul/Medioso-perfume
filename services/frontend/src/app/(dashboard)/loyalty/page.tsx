@@ -66,7 +66,7 @@ export default async function LoyaltyPage() {
               <div className="mt-auto flex justify-end gap-3 pt-6">
                 <RewardDialog t={t} reward={r} />
                 <span className="flex size-9 items-center justify-center rounded-full bg-white shadow">
-                  <DeleteButton action={deleteReward.bind(null, r.id)} label={t.delete} confirmText={t.confirmDelete} errorText={t.deleteError} />
+                  <DeleteButton action={deleteReward.bind(null, r.id)} label={t.delete} cancelText={dict.common.cancel} confirmText={t.confirmDelete} errorText={t.deleteError} />
                 </span>
               </div>
             </div>

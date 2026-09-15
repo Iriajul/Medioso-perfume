@@ -14,7 +14,10 @@ export function decodeJwt(token: string | undefined): Claims | null {
 
 export async function getUser() {
   const claims = decodeJwt((await cookies()).get("access")?.value);
-  return { name: claims?.full_name || claims?.email || "", email: claims?.email ?? "" };
+  if (claims?.full_name) return { name: claims.full_name, email: claims.email ?? "" };
+  // Sessions started before name claims existed keep claim-less tokens on refresh; ask the API.
+  const me = await apiGet<{ full_name: string; email: string }>("/api/v1/auth/me/");
+  return { name: me?.full_name || me?.email || "", email: me?.email ?? "" };
 }
 
 export async function apiFetch(path: string, init: RequestInit = {}) {

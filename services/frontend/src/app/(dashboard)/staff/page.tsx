@@ -73,7 +73,7 @@ export default async function StaffPage({ searchParams }: PageProps<"/staff">) {
                       <td className="px-6 py-5">
                         <div className="flex items-center gap-5">
                           <StaffDialog t={t} branches={branches ?? []} member={s} />
-                          <DeleteButton action={deleteStaff.bind(null, s.id)} label={t.delete} confirmText={t.confirmDelete} errorText={t.deleteError} />
+                          <DeleteButton action={deleteStaff.bind(null, s.id)} label={t.delete} cancelText={dict.common.cancel} confirmText={t.confirmDelete} errorText={t.deleteError} />
                         </div>
                       </td>
                     </tr>

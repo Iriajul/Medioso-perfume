@@ -79,7 +79,7 @@ export default async function BranchesPage({ searchParams }: PageProps<"/branche
                     <td className="px-8 py-4">
                       <div className="flex items-center gap-6">
                         <BranchDialog t={t} branch={b} />
-                        <DeleteButton action={deleteBranch.bind(null, b.id)} label={t.delete} confirmText={t.confirmDelete} errorText={t.deleteError} />
+                        <DeleteButton action={deleteBranch.bind(null, b.id)} label={t.delete} cancelText={dict.common.cancel} confirmText={t.confirmDelete} errorText={t.deleteError} />
                       </div>
                     </td>
                   </tr>
