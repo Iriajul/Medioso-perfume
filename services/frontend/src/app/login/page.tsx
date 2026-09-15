@@ -1,28 +1,18 @@
-import Image from "next/image";
+import AuthShell from "@/components/auth-shell";
 import LoginForm from "./login-form";
 
 export const metadata = { title: "Admin Login · Mad Perfume" };
 
-export default function LoginPage() {
+export default async function LoginPage({ searchParams }: PageProps<"/login">) {
+  const { reset } = await searchParams;
   return (
-    <main className="flex flex-1 flex-col items-center px-4 pt-12 pb-8">
-      <div className="flex size-24 items-center justify-center rounded-3xl bg-white shadow-[0_8px_24px_rgba(0,50,125,0.06)]">
-        <Image src="/logo.png" alt="Mad Perfume" width={64} height={36} priority />
-      </div>
-      <h1 className="mt-6 text-4xl font-medium tracking-tight text-brand">MAD PERFUME</h1>
-      <p className="mt-4 text-base tracking-[0.25em] text-gray-500">LUXURY FRAGRANCE ADMIN</p>
-
-      <section className="mt-12 w-full max-w-[400px] rounded-[28px] bg-white px-10 py-10 shadow-[0_24px_60px_rgba(0,50,125,0.08)]">
-        <h2 className="text-base text-gray-900">Admin Login</h2>
-        <p className="mt-2 text-base leading-6 text-gray-600">
-          Please enter your credentials to access the management dashboard.
+    <AuthShell title="Admin Login" subtitle="Please enter your credentials to access the management dashboard.">
+      {reset && (
+        <p role="status" className="mt-6 rounded-xl bg-green-50 px-4 py-3 text-sm text-green-700">
+          Your password has been updated. Please log in.
         </p>
-        <LoginForm />
-      </section>
-
-      <footer className="mt-14 text-[10px] tracking-[0.12em] text-gray-400">
-        © {new Date().getFullYear()} MAD PERFUME INTERNATIONAL. ALL RIGHTS RESERVED.
-      </footer>
-    </main>
+      )}
+      <LoginForm />
+    </AuthShell>
   );
 }

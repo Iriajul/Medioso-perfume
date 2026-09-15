@@ -2,10 +2,7 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-
-// Server-side calls use API_URL (e.g. http://backend:8000 inside local compose);
-// otherwise the public API URL.
-const API_URL = process.env.API_URL ?? process.env.NEXT_PUBLIC_API_URL;
+import { postJson } from "@/lib/api";
 
 type LoginState = { error: string; email: string } | undefined;
 
@@ -13,12 +10,7 @@ export async function login(_: LoginState, formData: FormData): Promise<LoginSta
   const email = String(formData.get("email") ?? "");
   const remember = formData.get("remember") === "on";
 
-  const res = await fetch(`${API_URL}/api/v1/auth/login/`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password: formData.get("password") }),
-    cache: "no-store",
-  }).catch(() => null);
+  const res = await postJson("/api/v1/auth/login/", { email, password: formData.get("password") });
 
   if (!res?.ok) {
     const error =
