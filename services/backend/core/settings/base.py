@@ -9,6 +9,7 @@ environment (via a .env file in local dev) using django-environ.
 import datetime as _dt
 from pathlib import Path
 
+import cloudinary
 import environ
 
 # services/backend/  (two levels up from this file: core/settings/base.py)
@@ -56,6 +57,7 @@ LOCAL_APPS = [
     "Apps.common",
     "Apps.accounts",
     "Apps.dashboard",
+    "Apps.catalog",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -239,6 +241,15 @@ EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
 EMAIL_HOST_USER = env("EMAIL_HOST_USER", default="")
 EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default="")
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="no-reply@bpmstudio.pt")
+
+# Cloudinary image storage (category / product / banner images).
+cloudinary.config(
+    cloud_name=env("CLOUDINARY_CLOUD_NAME", default=""),
+    api_key=env("CLOUDINARY_API_KEY", default=""),
+    api_secret=env("CLOUDINARY_API_SECRET", default=""),
+    secure=True,
+)
+CLOUDINARY_FOLDER = env("CLOUDINARY_FOLDER", default="madperfume")
 
 # Admin dashboard base URL, used in password reset links.
 ADMIN_URL = env("ADMIN_URL", default="http://localhost:3000")

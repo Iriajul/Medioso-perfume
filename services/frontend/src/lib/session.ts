@@ -17,8 +17,20 @@ export async function getUser() {
   return { name: claims?.full_name || claims?.email || "", email: claims?.email ?? "" };
 }
 
-export async function apiGet<T>(path: string): Promise<T | null> {
+export async function apiFetch(path: string, init: RequestInit = {}) {
   const access = (await cookies()).get("access")?.value;
-  const res = await fetch(`${API_URL}${path}`, { headers: { Authorization: `Bearer ${access}` }, cache: "no-store" }).catch(() => null);
+  return fetch(`${API_URL}${path}`, { ...init, headers: { Authorization: `Bearer ${access}` }, cache: "no-store" }).catch(() => null);
+}
+
+export async function apiGet<T>(path: string): Promise<T | null> {
+  const res = await apiFetch(path);
   return res?.ok ? res.json() : null;
+}
+
+/** Flattens a DRF error response ({field: [messages]}) into a list of messages. */
+export async function apiErrors(res: Response | null, fallback: string) {
+  if (!res) return [fallback];
+  const body = await res.json().catch(() => ({}));
+  const errors = Object.values(body).flat().map(String);
+  return errors.length ? errors : [fallback];
 }
