@@ -63,8 +63,10 @@ services:
       - path: ../environments/.env.local.frontend
         required: false
     environment:
-      # Browser-side calls go to the host-published backend port.
+      # Browser-side calls go to the host-published backend port...
       NEXT_PUBLIC_API_URL: http://localhost:8000
+      # ...server actions run inside the container, so they use the compose network.
+      API_URL: http://backend:8000
     volumes:
       - ../../services/frontend:/app
       - /app/node_modules
