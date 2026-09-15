@@ -1,0 +1,57 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "Ec2RdsRegionLocked",
+      "Effect": "Allow",
+      "Action": ["ec2:*", "rds:*"],
+      "Resource": "*",
+      "Condition": { "StringEquals": { "aws:RequestedRegion": "us-east-1" } }
+    },
+    {
+      "Sid": "KmsForEncryption",
+      "Effect": "Allow",
+      "Action": ["kms:DescribeKey", "kms:CreateGrant", "kms:ListGrants", "kms:RetireGrant", "kms:GenerateDataKey*", "kms:Decrypt", "kms:Encrypt", "kms:ReEncrypt*"],
+      "Resource": "*",
+      "Condition": { "StringEquals": { "aws:RequestedRegion": "us-east-1" } }
+    },
+    {
+      "Sid": "EcrRegionLocked",
+      "Effect": "Allow",
+      "Action": ["ecr:*"],
+      "Resource": "*",
+      "Condition": { "StringEquals": { "aws:RequestedRegion": "us-east-1" } }
+    },
+    {
+      "Sid": "DynamoLockTable",
+      "Effect": "Allow",
+      "Action": ["dynamodb:*"],
+      "Resource": "arn:aws:dynamodb:us-east-1:<AWS_ACCOUNT_ID>:table/madperfume-tflock"
+    },
+    {
+      "Sid": "DynamoList",
+      "Effect": "Allow",
+      "Action": ["dynamodb:ListTables", "dynamodb:DescribeLimits"],
+      "Resource": "*"
+    },
+    {
+      "Sid": "S3OurBuckets",
+      "Effect": "Allow",
+      "Action": ["s3:*"],
+      "Resource": [
+        "arn:aws:s3:::madperfume-tfstate-<AWS_ACCOUNT_ID>",
+        "arn:aws:s3:::madperfume-tfstate-<AWS_ACCOUNT_ID>/*",
+        "arn:aws:s3:::madperfume-media-prod",
+        "arn:aws:s3:::madperfume-media-prod/*",
+        "arn:aws:s3:::madperfume-media-staging",
+        "arn:aws:s3:::madperfume-media-staging/*"
+      ]
+    },
+    {
+      "Sid": "S3List",
+      "Effect": "Allow",
+      "Action": ["s3:ListAllMyBuckets", "s3:GetBucketLocation"],
+      "Resource": "*"
+    }
+  ]
+}

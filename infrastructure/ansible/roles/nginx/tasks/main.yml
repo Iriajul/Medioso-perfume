@@ -1,0 +1,56 @@
+---
+# ─── Role: nginx ──────────────────────────────────────────────────────
+# Installs Nginx and deploys the Mad Perfume application config.
+
+- name: Install Nginx
+  apt:
+    name: nginx
+    state: present
+    update_cache: yes
+
+- name: Deploy shared proxy params
+  copy:
+    src: "{{ playbook_dir }}/../../../deployment/nginx/shared/proxy-params.conf"
+    dest: /etc/nginx/conf.d/proxy-params.conf
+    mode: '0644'
+  notify: reload nginx
+
+- name: Deploy security headers config
+  copy:
+    src: "{{ playbook_dir }}/../../../deployment/nginx/shared/security-headers.conf"
+    dest: /etc/nginx/conf.d/security-headers.conf
+    mode: '0644'
+  notify: reload nginx
+
+- name: Deploy rate limiting config
+  copy:
+    src: "{{ playbook_dir }}/../../../deployment/nginx/shared/rate-limiting.conf"
+    dest: /etc/nginx/conf.d/rate-limiting.conf
+    mode: '0644'
+  notify: reload nginx
+
+- name: Deploy application Nginx config
+  template:
+    src: "{{ playbook_dir }}/../../../deployment/nginx/{{ env }}/app.conf"
+    dest: "/etc/nginx/sites-available/{{ nginx_site_name }}"
+    mode: '0644'
+  notify: reload nginx
+
+- name: Enable Nginx site
+  file:
+    src: "/etc/nginx/sites-available/{{ nginx_site_name }}"
+    dest: "/etc/nginx/sites-enabled/{{ nginx_site_name }}"
+    state: link
+  notify: reload nginx
+
+- name: Remove default Nginx site
+  file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+  notify: reload nginx
+
+- name: Ensure Nginx is started and enabled
+  service:
+    name: nginx
+    state: started
+    enabled: yes

@@ -1,0 +1,108 @@
+name: Mad Perfume PR Checks
+
+on:
+  pull_request:
+    branches:
+      - main
+      - staging
+
+jobs:
+  # Independent jobs so a failure in one service's checks never blocks or
+  # skips another's -- each area's status reflects only its own code.
+  backend:
+    name: Backend
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Set up Python
+        working-directory: services/backend
+        run: uv python install
+
+      - name: Install backend dependencies
+        working-directory: services/backend
+        run: uv sync --frozen
+
+      - name: Run Django checks
+        working-directory: services/backend
+        run: |
+          uv run python manage.py check --settings=core.settings.test
+          uv run python manage.py makemigrations --check --dry-run --settings=core.settings.test
+
+      - name: Run backend tests
+        working-directory: services/backend
+        run: uv run python manage.py test --settings=core.settings.test
+
+      - name: Validate backend Dockerfile
+        run: docker build --target prod -f services/backend/Dockerfile ./services/backend
+
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: services/frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: services/frontend
+        run: npm ci
+
+      - name: Lint
+        working-directory: services/frontend
+        run: npm run lint
+
+      - name: Build
+        working-directory: services/frontend
+        run: npm run build
+
+      - name: Validate frontend Dockerfile
+        run: docker build --target prod -f services/frontend/Dockerfile ./services/frontend
+
+  infra:
+    name: Infra Validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # ─── Compose Validation ───────────────────────────────────────
+      - name: Validate docker-compose files
+        env:
+          REGISTRY: example.dkr.ecr.us-east-1.amazonaws.com
+        run: |
+          # Remote env files are gitignored; stub them from the examples.
+          for f in deployment/environments/.env.*.example; do cp "$f" "${f%.example}"; done
+          for env in local staging production; do
+            docker compose \
+              -f deployment/compose/docker-compose.base.yml \
+              -f deployment/compose/$env/docker-compose.yml config --quiet
+          done
+
+      # ─── Terraform Validate ───────────────────────────────────────
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "~1.5"
+
+      - name: Terraform Format Check
+        run: terraform fmt -check -recursive infrastructure/terraform/
+
+      - name: Terraform Validate
+        run: |
+          for d in bootstrap environments/production environments/staging; do
+            (cd infrastructure/terraform/$d && terraform init -backend=false && terraform validate)
+          done

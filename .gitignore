@@ -1,0 +1,166 @@
+# ==============================================================================
+# Mad Perfume — Unified Root .gitignore (Enterprise Production Ready)
+# ==============================================================================
+
+# ─── 1. Environment Secrets & Private Credentials ─────────────────────────────
+.env
+.env.*
+*.env
+.env.local
+.env.development
+.env.staging
+.env.production
+.env.local.*
+!.env.example
+!**/.env*.example
+*.pem
+*.key
+*.pub
+secret_vars.yml
+.vault_pass
+hosts.ini
+**/.terraform/
+*.tfvars
+*.tfvars.json
+
+# ─── 2. AI Tools, Assistant Files & Caches ────────────────────────────────────
+# Claude Code
+.claudecode/
+claudecode.json
+claudecode_history
+
+# Cursor & Windsurf
+.cursor/
+.cursor_history
+.windsurf/
+windsurf.log
+.cursorrules.local
+
+# OpenAI, Anthropic, Gemini, MCP configurations
+.gemini/
+.openai/
+.anthropic/
+*ai_cache*
+*prompt_history*
+mcp-config.json
+.mcp/
+*.ai-session
+
+# ─── 3. Python & Django ───────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+/lib/
+/lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+.venv/
+venv/
+ENV/
+env/
+.virtualenv
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+.ipynb_checkpoints
+celerybeat-schedule
+celerybeat.pid
+*.mo
+*.pot
+
+# Django specific
+db.sqlite3
+db.sqlite3-journal
+**/media/
+**/staticfiles/
+**/static_root/
+
+# AI Reports & outputs
+**/reports/
+
+# ─── 4. Node.js & Frontends (Next.js) ─────────────────────────────────────────
+node_modules/
+.npm/
+.pnpm-store/
+.pnpm-debug.log
+yarn-error.log
+yarn-debug.log*
+.next/
+out/
+.nuxt/
+.docusaurus/
+
+# ─── 5. Docker ────────────────────────────────────────────────────────────────
+.docker/
+*.docker-cache
+docker-compose.override.yml
+
+# ─── 6. Terraform ─────────────────────────────────────────────────────────────
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraform.lock.hcl
+.terraformrc
+terraform.rc
+backend.hcl
+
+# ─── 7. Ansible ───────────────────────────────────────────────────────────────
+*.retry
+
+# ─── 8. IDEs & Editors ────────────────────────────────────────────────────────
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+
+# ─── 9. Operating System Files ────────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+# ─── 10. Logs & Temp Files ────────────────────────────────────────────────────
+*.log
+*.tmp
+*.bak
+temp/
+tmp/
+
+AWS Credentials
+
+# Next.js
+next-env.d.ts
+*.tsbuildinfo
+

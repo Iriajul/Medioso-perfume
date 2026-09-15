@@ -1,0 +1,30 @@
+---
+# ─── Role: certbot ────────────────────────────────────────────────────
+# Installs Certbot and provisions SSL certs for all Mad Perfume subdomains.
+
+- name: Install Certbot and Nginx plugin
+  apt:
+    name:
+      - certbot
+      - python3-certbot-nginx
+    state: present
+    update_cache: yes
+
+- name: Obtain SSL certificate for the API and admin subdomains
+  # DNS A records for both hosts must already point at this server's Elastic IP.
+  command: >
+    certbot --nginx
+    -d {{ api_host }}
+    -d {{ admin_host }}
+    --non-interactive
+    --agree-tos
+    -m {{ certbot_email }}
+    --expand
+  register: certbot_result
+  changed_when: "'Certificate not yet due for renewal' not in certbot_result.stdout"
+
+- name: Ensure certbot auto-renewal timer is enabled
+  service:
+    name: certbot.timer
+    state: started
+    enabled: yes

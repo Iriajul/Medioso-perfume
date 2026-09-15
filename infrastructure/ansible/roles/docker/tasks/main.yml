@@ -1,0 +1,71 @@
+---
+# ─── Role: docker ─────────────────────────────────────────────────────
+# Installs Docker CE and docker compose plugin on Ubuntu.
+
+- name: Create Docker apt keyrings directory
+  file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+
+- name: Download Docker GPG key
+  ansible.builtin.get_url:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    dest: /etc/apt/keyrings/docker.asc
+    mode: '0644'
+
+- name: Resolve Docker repo codename (noble fallback for newer Ubuntu)
+  set_fact:
+    docker_repo_codename: "{{ 'noble' if ansible_distribution_release in ['noble', 'resolute', 'oracular'] else ansible_distribution_release }}"
+
+- name: Add Docker apt repository
+  ansible.builtin.apt_repository:
+    repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu {{ docker_repo_codename }} stable"
+    state: present
+
+- name: Install Docker CE and compose plugin
+  apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: present
+    update_cache: yes
+
+- name: Add ubuntu user to docker group
+  user:
+    name: ubuntu
+    groups: docker
+    append: yes
+
+- name: Ensure Docker service is enabled and started
+  service:
+    name: docker
+    state: started
+    enabled: yes
+
+# ─── AWS CLI v2 — used to authenticate Docker to ECR via the instance
+#     profile (aws ecr get-login-password). No static keys involved. ──────
+- name: Install unzip (required by the AWS CLI installer)
+  apt:
+    name: unzip
+    state: present
+
+- name: Download AWS CLI v2 installer
+  ansible.builtin.get_url:
+    url: https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip
+    dest: /tmp/awscliv2.zip
+    mode: '0644'
+
+- name: Unpack AWS CLI installer
+  ansible.builtin.unarchive:
+    src: /tmp/awscliv2.zip
+    dest: /tmp
+    remote_src: yes
+
+- name: Install AWS CLI v2 (idempotent)
+  ansible.builtin.command: /tmp/aws/install --update
+  args:
+    creates: /usr/local/bin/aws

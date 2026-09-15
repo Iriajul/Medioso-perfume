@@ -1,0 +1,68 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "schemaVersion": 39,
+  "tags": ["madperfume"],
+  "title": "madperfume — Production Overview",
+  "uid": "madperfume-overview",
+  "time": { "from": "now-6h", "to": "now" },
+  "refresh": "30s",
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Targets Up",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "fieldConfig": { "defaults": { "unit": "short", "color": { "mode": "thresholds" }, "thresholds": { "steps": [ { "color": "red", "value": null }, { "color": "green", "value": 1 } ] } }, "overrides": [] },
+      "targets": [ { "refId": "A", "expr": "count(up == 1)", "datasource": { "type": "prometheus", "uid": "prometheus" } } ]
+    },
+    {
+      "type": "gauge",
+      "title": "Root Disk Used %",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 6, "x": 6, "y": 0 },
+      "fieldConfig": { "defaults": { "unit": "percent", "min": 0, "max": 100, "thresholds": { "steps": [ { "color": "green", "value": null }, { "color": "yellow", "value": 70 }, { "color": "red", "value": 85 } ] } }, "overrides": [] },
+      "targets": [ { "refId": "A", "expr": "100 - (node_filesystem_avail_bytes{mountpoint=\"/\",fstype!=\"tmpfs\"} / node_filesystem_size_bytes{mountpoint=\"/\",fstype!=\"tmpfs\"} * 100)", "datasource": { "type": "prometheus", "uid": "prometheus" } } ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Host CPU %",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "fieldConfig": { "defaults": { "unit": "percent", "min": 0, "max": 100 }, "overrides": [] },
+      "targets": [ { "refId": "A", "expr": "100 - (avg(rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)", "legendFormat": "cpu", "datasource": { "type": "prometheus", "uid": "prometheus" } } ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Host Memory %",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 6, "x": 0, "y": 8 },
+      "fieldConfig": { "defaults": { "unit": "percent", "min": 0, "max": 100 }, "overrides": [] },
+      "targets": [ { "refId": "A", "expr": "100 * (1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)", "legendFormat": "memory", "datasource": { "type": "prometheus", "uid": "prometheus" } } ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Container CPU (cores)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 6, "y": 8 },
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "targets": [ { "refId": "A", "expr": "sum by(name)(rate(container_cpu_usage_seconds_total{name!=\"\"}[5m]))", "legendFormat": "{{name}}", "datasource": { "type": "prometheus", "uid": "prometheus" } } ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Container Memory (MB)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 6, "x": 18, "y": 8 },
+      "fieldConfig": { "defaults": { "unit": "decmbytes" }, "overrides": [] },
+      "targets": [ { "refId": "A", "expr": "sum by(name)(container_memory_usage_bytes{name!=\"\"}) / 1024 / 1024", "legendFormat": "{{name}}", "datasource": { "type": "prometheus", "uid": "prometheus" } } ]
+    },
+    {
+      "type": "logs",
+      "title": "Container Logs (Loki)",
+      "datasource": { "type": "loki", "uid": "loki" },
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 16 },
+      "options": { "showTime": true, "wrapLogMessage": true, "sortOrder": "Descending" },
+      "targets": [ { "refId": "A", "expr": "{job=\"madperfume-containers\"}", "datasource": { "type": "loki", "uid": "loki" } } ]
+    }
+  ]
+}

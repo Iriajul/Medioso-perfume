@@ -1,0 +1,75 @@
+# ─── Local Development Compose ────────────────────────────────────────
+# Usage: docker compose -f ../docker-compose.base.yml -f docker-compose.yml up
+#
+# Builds both services from source with hot-reload volumes mounted, plus
+# local PostgreSQL and Redis (production uses RDS).
+
+services:
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: ${PROJECT_NAME:-madperfume}-postgres
+    environment:
+      POSTGRES_DB: madperfume
+      POSTGRES_USER: madperfume
+      POSTGRES_PASSWORD: madperfume
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U madperfume -d madperfume"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - app-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: ${PROJECT_NAME:-madperfume}-redis
+    networks:
+      - app-network
+
+  backend:
+    build:
+      context: ../../services/backend
+      dockerfile: Dockerfile
+      # Hot-reloading dev image (Django runserver), not the gunicorn prod stage.
+      target: dev
+    env_file:
+      - path: ../environments/.env.local.backend
+        required: false
+    volumes:
+      # Live source for autoreload...
+      - ../../services/backend:/app
+      # ...but keep the image's installed virtualenv: this anonymous volume
+      # shadows the bind-mount at /app/.venv so the host dir can't hide Django.
+      - /app/.venv
+    environment:
+      DEBUG: "True"
+      DATABASE_URL: postgres://madperfume:madperfume@postgres:5432/madperfume
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  frontend:
+    build:
+      context: ../../services/frontend
+      dockerfile: Dockerfile
+      target: dev
+    env_file:
+      - path: ../environments/.env.local.frontend
+        required: false
+    environment:
+      # Browser-side calls go to the host-published backend port.
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+    volumes:
+      - ../../services/frontend:/app
+      - /app/node_modules
+      - /app/.next
+
+volumes:
+  postgres_data:
+    driver: local

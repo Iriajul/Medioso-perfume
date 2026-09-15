@@ -1,0 +1,37 @@
+# ─── Mad Perfume Global Variables ──────────────────────────────────────────
+# Values shared across all environments. Override in <env>.yml files.
+
+project_name: "{{ lookup('env', 'PROJECT_NAME') | default('madperfume', true) }}"
+project_path: "/home/ubuntu/{{ project_name }}"
+website_domain: "bpmstudio.pt"
+certbot_email: "[EMAIL_ADDRESS]"
+
+# Docker Compose files on the remote server. The server mirrors the repo's
+# deployment/ subtree, so the SAME base + env-override command that runs
+# locally (make up-prod) also runs here — keeping ports, networks, volumes
+# and healthchecks (defined in the base file) intact.
+compose_base:     "{{ project_path }}/deployment/compose/docker-compose.base.yml"
+compose_override: "{{ project_path }}/deployment/compose/{{ env }}/docker-compose.yml"
+
+# ECR registry + tag for ${REGISTRY}/<svc>:${IMAGE_TAG} interpolation in the
+# compose files. Pass at deploy time, e.g.:
+#   REGISTRY=<acct>.dkr.ecr.us-east-1.amazonaws.com IMAGE_TAG=<sha> make ansible-prod
+ecr_registry: "{{ lookup('env', 'REGISTRY') | default('', true) }}"
+image_tag:    "{{ lookup('env', 'IMAGE_TAG') | default('latest', true) }}"
+
+# AWS region for Secrets Manager lookups and other AWS service calls.
+aws_region: "{{ lookup('env', 'AWS_REGION') | default('us-east-1', true) }}"
+
+# Grafana admin password: fetched from AWS Secrets Manager by the monitoring role.
+# This is a fallback used only if Secrets Manager fetch fails (e.g., during initial
+# bootstrap before the secret is created). See infrastructure/terraform/shared/secrets.tf
+# for Secrets Manager setup. For local development or testing, you can override:
+#   GRAFANA_PASSWORD=my-password make ansible-staging
+grafana_password: "{{ lookup('env', 'GRAFANA_PASSWORD') | default('', true) }}"
+
+# Nginx config name
+nginx_site_name: "madperfume"
+
+# Services list (used in loops)
+services:
+  - name: backend

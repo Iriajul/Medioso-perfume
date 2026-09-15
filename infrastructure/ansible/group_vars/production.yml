@@ -1,0 +1,13 @@
+# ─── Mad Perfume Production Overrides ──────────────────────────────────────
+env: production
+website_domain: "bpmstudio.pt"
+api_host: "api.{{ website_domain }}"
+admin_host: "admin.{{ website_domain }}"
+certbot_email: "admin@bpmstudio.pt"   # TODO: set a real, monitored inbox for Let's Encrypt notices
+
+# Grafana admin password is stored in AWS Secrets Manager and fetched at
+# deploy time by the monitoring role. See infrastructure/terraform/shared/secrets.tf
+# for setup instructions. The fallback grafana_password below is only used if
+# Secrets Manager fetch fails (useful for initial bootstrap if the secret
+# hasn't been created yet).
+grafana_password: "{{ lookup('env', 'GRAFANA_PASSWORD') | default('', true) }}"

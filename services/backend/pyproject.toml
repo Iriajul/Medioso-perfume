@@ -1,0 +1,21 @@
+[project]
+name = "madperfume-backend"
+version = "0.1.0"
+description = "Mad Perfume backend API and admin (Django + DRF)"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "boto3>=1.35.0",
+    "django>=6.0",
+    "django-cors-headers>=4.9.0",
+    "django-environ>=0.13.0",
+    "django-storages>=1.14.2",
+    "djangorestframework>=3.17.1",
+    "djangorestframework-simplejwt>=5.5.1",
+    "drf-spectacular>=0.29.0",
+    "gunicorn>=23.0.0",
+    "pillow>=11.0.0",
+    "psycopg[binary]>=3.3.4",
+    "redis>=5.0.0",
+    "whitenoise>=6.9.0",
+]

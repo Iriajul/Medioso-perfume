@@ -1,0 +1,56 @@
+---
+# ─── Role: monitoring ─────────────────────────────────────────────────
+# Deploys Prometheus + Grafana + node-exporter + cAdvisor + Loki/Promtail
+# alongside the app. UIs bind to 127.0.0.1 only (reach Grafana via SSH tunnel:
+#   ssh -L 3100:localhost:3100 ubuntu@<server> ).
+
+- name: Create monitoring directory
+  file:
+    path: "{{ project_path }}/deployment/monitoring"
+    state: directory
+    owner: ubuntu
+    group: ubuntu
+    mode: '0755'
+
+- name: Copy monitoring stack files
+  copy:
+    src: "{{ playbook_dir }}/../../../deployment/monitoring/"
+    dest: "{{ project_path }}/deployment/monitoring/"
+    owner: ubuntu
+    group: ubuntu
+    mode: preserve
+
+- name: Fetch Grafana password from AWS Secrets Manager
+  shell: |
+    aws secretsmanager get-secret-value \
+      --secret-id "{{ project_name }}/{{ env }}/grafana-password" \
+      --region "{{ aws_region }}" \
+      --query 'SecretString' \
+      --output text
+  register: grafana_secret_result
+  no_log: true
+  changed_when: false
+  # Allows the secret fetch to fail gracefully if the secret doesn't exist yet.
+  # You can suppress the error for initial bootstraps where the secret will be
+  # created manually before the first real deploy.
+  ignore_errors: true
+
+- name: Use fetched secret or fallback to env var
+  set_fact:
+    grafana_password_final: "{{ grafana_secret_result.stdout if grafana_secret_result.stdout else grafana_password }}"
+  no_log: true
+
+- name: Write monitoring .env (Grafana admin password from Secrets Manager)
+  copy:
+    dest: "{{ project_path }}/deployment/monitoring/.env"
+    content: "GRAFANA_PASSWORD={{ grafana_password_final }}\n"
+    owner: ubuntu
+    group: ubuntu
+    mode: '0600'
+  no_log: true
+
+- name: Bring up the monitoring stack
+  shell: docker compose -f docker-compose.monitoring.yml up -d --force-recreate --remove-orphans
+  args:
+    chdir: "{{ project_path }}/deployment/monitoring"
+  become_user: ubuntu

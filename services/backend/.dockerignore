@@ -1,0 +1,68 @@
+# =============================================================================
+# Docker build context exclusions for the Mad Perfume backend.
+# Keeps the image small, the build cache stable, and secrets/host-only
+# artifacts out of the image.
+# =============================================================================
+
+# --- Virtual envs (host .venv MUST NOT overwrite the image's /app/.venv) ------
+.venv/
+venv/
+ENV/
+env/
+
+# --- Python caches / build artifacts -----------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# --- Secrets & local environment ---------------------------------------------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# --- Generated/runtime data (rebuilt in the image or mounted as volumes) ------
+staticfiles/
+media/
+static_root/
+db.sqlite3
+db.sqlite3-journal
+*.log
+
+# --- VCS & CI ----------------------------------------------------------------
+.git/
+.gitignore
+.github/
+.gitattributes
+
+# --- Docker (avoid recursive context bloat) ----------------------------------
+Dockerfile
+.dockerignore
+docker-compose*.yml
+
+# --- Editor / OS noise -------------------------------------------------------
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# --- Docs not needed at runtime ----------------------------------------------
+*.md
+!README.md

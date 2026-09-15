@@ -1,0 +1,16 @@
+# ─── Staging Compose ──────────────────────────────────────────────────
+# Usage: docker compose -f ../docker-compose.base.yml -f docker-compose.yml up -d
+#
+# Uses staging-tagged images. Mirrors production but with staging env.
+
+services:
+
+  backend:
+    image: ${REGISTRY}/madperfume-backend:${IMAGE_TAG:-staging}
+    env_file:
+      - ../environments/.env.staging.backend
+
+  frontend:
+    image: ${REGISTRY}/madperfume-frontend:${FRONTEND_IMAGE_TAG:-${IMAGE_TAG:-staging}}
+    env_file:
+      - ../environments/.env.staging.frontend

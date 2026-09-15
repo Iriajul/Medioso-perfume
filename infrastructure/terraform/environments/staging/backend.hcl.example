@@ -1,0 +1,7 @@
+# Copy to backend.hcl, set the bucket to the one bootstrap created, then:
+#   terraform init -backend-config=backend.hcl
+bucket         = "madperfume-tfstate-CHANGEME1234"
+key            = "staging/terraform.tfstate"
+region         = "us-east-1"
+dynamodb_table = "madperfume-tflock"
+encrypt        = true

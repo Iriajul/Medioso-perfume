@@ -1,0 +1,7 @@
+# Copy to terraform.tfvars and fill in. (terraform.tfvars is gitignored.)
+# The bucket name must be GLOBALLY unique across all of AWS — add random chars.
+
+project_name      = "madperfume"
+region            = "us-east-1"
+aws_profile       = "default"
+state_bucket_name = "madperfume-tfstate-CHANGEME1234"

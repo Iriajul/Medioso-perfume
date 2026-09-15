@@ -1,0 +1,77 @@
+---
+# ─── Role: app-deploy ─────────────────────────────────────────────────
+# Mirrors the repo's deployment/ subtree onto the server (base compose +
+# env override + per-service .env files), then brings the stack up via the
+# handler. The subtree layout means the relative paths inside the compose
+# files (e.g. ../environments/.env.production.backend) resolve correctly.
+
+- name: Create project directory
+  file:
+    path: "{{ project_path }}"
+    state: directory
+    mode: '0755'
+    owner: ubuntu
+    group: ubuntu
+
+- name: Create deployment subdirectories
+  file:
+    path: "{{ project_path }}/{{ item }}"
+    state: directory
+    mode: '0755'
+    owner: ubuntu
+    group: ubuntu
+  loop:
+    - "deployment/compose/{{ env }}"
+    - deployment/environments
+
+- name: Copy base docker-compose file
+  copy:
+    src: "{{ playbook_dir }}/../../../deployment/compose/docker-compose.base.yml"
+    dest: "{{ project_path }}/deployment/compose/docker-compose.base.yml"
+    mode: '0644'
+    owner: ubuntu
+    group: ubuntu
+  notify: restart docker compose
+
+- name: "Copy {{ env }} docker-compose override"
+  copy:
+    src: "{{ playbook_dir }}/../../../deployment/compose/{{ env }}/docker-compose.yml"
+    dest: "{{ project_path }}/deployment/compose/{{ env }}/docker-compose.yml"
+    mode: '0644'
+    owner: ubuntu
+    group: ubuntu
+  notify: restart docker compose
+
+- name: Copy service .env files to server
+  copy:
+    src: "{{ playbook_dir }}/../../../deployment/environments/.env.{{ env }}.{{ item }}"
+    dest: "{{ project_path }}/deployment/environments/.env.{{ env }}.{{ item }}"
+    mode: '0600'
+    owner: ubuntu
+    group: ubuntu
+  loop:
+    - backend
+    - frontend
+  notify: restart docker compose
+
+- name: Write the Compose runtime environment
+  # Interpolation-only values for the compose files. App secrets live in the
+  # per-service env files copied above.
+  copy:
+    dest: "{{ project_path }}/.env"
+    content: |
+      PROJECT_NAME={{ project_name }}
+      REGISTRY={{ ecr_registry }}
+      IMAGE_TAG={{ image_tag }}
+    mode: '0600'
+    owner: ubuntu
+    group: ubuntu
+  notify: restart docker compose
+
+- name: Copy on-box deploy script (invoked by CI via SSM)
+  copy:
+    src: "{{ playbook_dir }}/../../../deployment/scripts/server-deploy.sh"
+    dest: "{{ project_path }}/server-deploy.sh"
+    mode: '0755'
+    owner: ubuntu
+    group: ubuntu

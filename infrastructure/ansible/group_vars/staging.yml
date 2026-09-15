@@ -1,0 +1,6 @@
+# ─── Mad Perfume Staging Overrides ─────────────────────────────────────────
+env: staging
+website_domain: "bpmstudio.pt"
+api_host: "staging-api.{{ website_domain }}"
+admin_host: "staging-admin.{{ website_domain }}"
+certbot_email: "admin@bpmstudio.pt"   # TODO: set a real, monitored inbox for Let's Encrypt notices

@@ -1,0 +1,31 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    project: 'madperfume'
+    environment: 'production'
+
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Host metrics: CPU, memory, disk, network, load (resolved over monitoring-net)
+  - job_name: 'node'
+    static_configs:
+      - targets: ['node-exporter:9100']
+
+  # Per-container metrics: CPU, memory, network, restarts per container
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080']
+
+  # ── App metrics — ENABLE after instrumenting the apps ───────────────
+  # backend: add `django-prometheus` (INSTALLED_APPS + MIDDLEWARE + /metrics url)
+  # The apps publish their ports on the host, so scrape via the docker
+  # host gateway (Prometheus has extra_hosts: host.docker.internal).
+  # - job_name: 'madperfume-backend'
+  #   metrics_path: /metrics
+  #   static_configs:
+  #     - targets: ['host.docker.internal:8000']
