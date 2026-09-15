@@ -16,9 +16,31 @@ env:
   IMAGE_TAG: ${{ github.sha }}
 
 jobs:
+  # Which services changed in this push; manual runs rebuild both.
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.backend == 'true' }}
+      frontend: ${{ github.event_name == 'workflow_dispatch' || steps.filter.outputs.frontend == 'true' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          base: ${{ github.event.before }}
+          filters: |
+            backend:
+              - 'services/backend/**'
+              - '.github/workflows/deploy.yml'
+            frontend:
+              - 'services/frontend/**'
+              - '.github/workflows/deploy.yml'
+
   # ─── Build & Push to ECR ────────────────────────────────────────────
   build:
     name: Build & Push Images to ECR
+    needs: changes
     runs-on: ubuntu-latest
     outputs:
       registry: ${{ steps.login-ecr.outputs.registry }}
@@ -40,7 +62,35 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      # The server deploys every service at this commit's SHA tag. For a service
+      # that didn't change, point the SHA tag at its current :latest image instead
+      # of rebuilding. If there is no :latest yet (first deploy), build it.
+      - name: Reuse unchanged images
+        id: reuse
+        env:
+          BACKEND_CHANGED: ${{ needs.changes.outputs.backend }}
+          FRONTEND_CHANGED: ${{ needs.changes.outputs.frontend }}
+        run: |
+          retag() {
+            local repo=$1 manifest type
+            manifest=$(aws ecr batch-get-image --repository-name "$repo" --image-ids imageTag=latest \
+              --query 'images[0].imageManifest' --output text 2>/dev/null) || return 1
+            type=$(aws ecr batch-get-image --repository-name "$repo" --image-ids imageTag=latest \
+              --query 'images[0].imageManifestMediaType' --output text)
+            [ -n "$manifest" ] && [ "$manifest" != "None" ] || return 1
+            aws ecr put-image --repository-name "$repo" --image-tag "$GITHUB_SHA" \
+              --image-manifest "$manifest" --image-manifest-media-type "$type" >/dev/null
+          }
+          for svc in backend frontend; do
+            changed_var="${svc^^}_CHANGED"
+            if [ "${!changed_var}" = "true" ]; then build=true
+            elif retag "madperfume-$svc"; then build=false; echo "Reused madperfume-$svc:latest as $GITHUB_SHA"
+            else build=true; fi
+            echo "build_$svc=$build" >> "$GITHUB_OUTPUT"
+          done
+
       - name: Build & push backend
+        if: steps.reuse.outputs.build_backend == 'true'
         uses: docker/build-push-action@v5
         with:
           context: ./services/backend
@@ -54,6 +104,7 @@ jobs:
           cache-to: type=gha,mode=max,scope=backend
 
       - name: Build & push frontend
+        if: steps.reuse.outputs.build_frontend == 'true'
         uses: docker/build-push-action@v5
         with:
           context: ./services/frontend
