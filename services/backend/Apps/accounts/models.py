@@ -14,6 +14,12 @@ from Apps.accounts.managers import UserManager
 class User(AbstractBaseUser, PermissionsMixin):
     """Platform user. Email is the login identifier."""
 
+    class StaffRole(models.TextChoices):
+        BOUTIQUE_MANAGER = "boutique_manager", "Boutique Manager"
+        MASTER_NOSE = "master_nose", "Master Nose"
+        SENIOR_ADVISOR = "senior_advisor", "Senior Advisor"
+        SALES_CONSULTANT = "sales_consultant", "Sales Consultant"
+
     email = models.EmailField(unique=True)
     full_name = models.CharField(max_length=255)
     phone = models.CharField(max_length=30, blank=True)
@@ -29,7 +35,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False)
     # Staff directory (is_staff accounts that are not superusers).
     branch = models.ForeignKey("branches.Branch", on_delete=models.SET_NULL, null=True, blank=True, related_name="staff")
-    job_title = models.CharField(max_length=100, blank=True)
+    job_title = models.CharField(max_length=30, choices=StaffRole.choices, blank=True)
     password_changed_at = models.DateTimeField(null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)

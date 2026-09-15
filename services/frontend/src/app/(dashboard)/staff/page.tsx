@@ -3,6 +3,7 @@ import { MapPin } from "lucide-react";
 import Avatar from "@/components/avatar";
 import DeleteButton from "@/components/delete-button";
 import ListFooter from "@/components/list-footer";
+import type { Dictionary } from "@/i18n/dictionaries";
 import { getDictionary, getLang } from "@/i18n/server";
 import { apiGet } from "@/lib/session";
 import { deleteStaff } from "./actions";
@@ -10,7 +11,7 @@ import StaffDialog from "./staff-dialog";
 
 export type StaffMember = {
   id: number; full_name: string; email: string; branch: number | null; branch_name: string | null;
-  job_title: string; is_active: boolean; avatar_url: string;
+  job_title: keyof Dictionary["staff"]["roles"] | ""; is_active: boolean; avatar_url: string;
 };
 
 const PAGE_SIZE = 4;
@@ -69,7 +70,7 @@ export default async function StaffPage({ searchParams }: PageProps<"/staff">) {
                         </span>
                       </td>
                       <td className="max-w-28 px-6 py-5"><span className="flex items-start gap-2 text-sm text-gray-700"><MapPin className="mt-0.5 size-4 shrink-0 text-blue-300" />{s.branch_name ?? "—"}</span></td>
-                      <td className="max-w-28 px-6 py-5 text-sm text-gray-700">{s.job_title}</td>
+                      <td className="max-w-28 px-6 py-5 text-sm text-gray-700">{s.job_title ? t.roles[s.job_title] : "—"}</td>
                       <td className="px-6 py-5">
                         <div className="flex items-center gap-5">
                           <StaffDialog t={t} branches={branches ?? []} member={s} />
