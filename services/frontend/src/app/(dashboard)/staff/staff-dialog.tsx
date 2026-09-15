@@ -34,7 +34,7 @@ export default function StaffDialog({ t, branches, member }: { t: Dictionary["st
         <div className="flex items-start border-b border-gray-100 px-8 py-8">
           <div className="flex-1">
             <h2 className="text-base font-semibold text-brand-light">{member ? t.editTitle : t.newTitle}</h2>
-            <p className="mt-1 text-base text-gray-700">{t.modalSubtitle}</p>
+            <p className="mt-1 text-base text-gray-700">{member ? t.editSubtitle : t.modalSubtitle}</p>
           </div>
           <button type="button" onClick={close} aria-label="Close" className="text-gray-700"><X className="size-5" /></button>
         </div>
@@ -67,7 +67,10 @@ export default function StaffDialog({ t, branches, member }: { t: Dictionary["st
                 </select>
               </label>
               <label className="block"><span className={label}>{t.role}</span>
-                <input name="job_title" required maxLength={100} defaultValue={member?.job_title} placeholder={t.rolePlaceholder} className={`${field} mt-3`} />
+                <select name="job_title" required defaultValue={member?.job_title ?? ""} className={`${field} mt-3`}>
+                  <option value="" disabled>{t.selectRole}</option>
+                  {Object.entries(t.roles).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                </select>
               </label>
             </div>
 

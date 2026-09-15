@@ -32,7 +32,7 @@ class StaffApiTests(Base):
 
     def test_create_invites_by_email(self, upload, destroy):
         payload = {"full_name": "Julian Vasseur", "email": "julian.v@madperfume.com", "branch": self.paris.pk,
-                   "job_title": "Master Nose", "is_active": True, "photo": png()}
+                   "job_title": "master_nose", "is_active": True, "photo": png()}
         with self.captureOnCommitCallbacks(execute=True):
             response = self.client.post(self.url, payload, format="multipart")
 
@@ -46,7 +46,7 @@ class StaffApiTests(Base):
     def test_list_excludes_admins_no_n_plus_one(self, upload, destroy):
         for i in range(5):
             User.objects.create_user(email=f"s{i}@madperfume.com", password=None, full_name=f"S {i}", is_staff=True,
-                                     branch=self.paris, job_title="Advisor", is_active=i != 0)
+                                     branch=self.paris, job_title="senior_advisor", is_active=i != 0)
         # auth + count + page (branch join) + stats
         with self.assertNumQueries(4):
             data = self.client.get(self.url).json()
@@ -56,6 +56,10 @@ class StaffApiTests(Base):
     def test_branch_and_role_required(self, upload, destroy):
         response = self.client.post(self.url, {"full_name": "X", "email": "x@madperfume.com"}, format="multipart")
         self.assertEqual(set(response.json()), {"branch", "job_title"})
+
+    def test_role_must_be_a_known_choice(self, upload, destroy):
+        payload = {"full_name": "X", "email": "x@madperfume.com", "branch": self.paris.pk, "job_title": "Anything I type"}
+        self.assertIn("job_title", self.client.post(self.url, payload, format="multipart").json())
 
 
 class NotificationTests(Base):
