@@ -93,7 +93,7 @@ export default async function CustomerProfilePage({ params }: PageProps<"/custom
                 {c.orders.map((o) => (
                   <tr key={o.id} className="border-b border-gray-100 last:border-0">
                     <td className="px-5 py-5 font-semibold text-gray-900"><Link href={`/orders/${o.id}`} className="hover:text-brand">#{o.number}</Link></td>
-                    <td className="px-5 py-5 text-gray-700">{date.format(new Date(o.created_at))}</td>
+                    <td className="whitespace-nowrap px-5 py-5 text-gray-700">{date.format(new Date(o.created_at))}</td>
                     <td className="px-5 py-5">
                       <span className="flex items-center">
                         {o.images.filter(Boolean).slice(0, 1).map((src) => (
@@ -113,12 +113,12 @@ export default async function CustomerProfilePage({ params }: PageProps<"/custom
         </section>
       </div>
 
-      <section className={`${card} mx-auto mt-10 max-w-3xl overflow-hidden`}>
+      <section className={`${card} mt-10 overflow-hidden`}>
         <h2 className="px-8 py-7 text-xl font-semibold text-gray-900">{t.loyaltyHistory}</h2>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-[#eef2fb] text-[11px] font-semibold uppercase tracking-[0.1em] text-gray-600">
-              <tr>{[t.channelBranch, t.dateTime, t.orderNo, t.amount].map((h) => <th key={h} className="px-8 py-5 text-start font-semibold">{h}</th>)}<th className="px-8 py-5 text-end font-semibold">{dict.common.points}</th><th className="px-8 py-5 text-end font-semibold">{t.balanceAfter}</th></tr>
+              <tr>{[t.channelBranch, t.dateTime, t.orderNo, t.amount].map((h) => <th key={h} className="whitespace-nowrap px-5 py-5 text-start font-semibold">{h}</th>)}<th className="whitespace-nowrap px-5 py-5 text-end font-semibold">{dict.common.points}</th><th className="whitespace-nowrap px-5 py-5 text-end font-semibold">{t.balanceAfter}</th></tr>
             </thead>
             <tbody>
               {c.loyalty_history.map((e) => {
@@ -128,17 +128,17 @@ export default async function CustomerProfilePage({ params }: PageProps<"/custom
                   : e.channel === "app" ? [Smartphone, dict.common.channels.app, t.digitalStore] : [Store, e.branch_name ?? dict.common.channels.branch, t.physicalBranch];
                 return (
                   <tr key={e.id} className="border-b border-gray-100 last:border-0">
-                    <td className="px-8 py-6">
+                    <td className="px-5 py-5">
                       <span className="flex items-center gap-3">
                         <span className={`flex size-8 shrink-0 items-center justify-center rounded-full ${redeemed ? "bg-red-50 text-red-600" : "bg-[#e3e8f7] text-brand"}`}><Icon className="size-4" /></span>
                         <span><span className="block font-semibold text-gray-900">{title}</span><span className="block text-[10px] uppercase tracking-wide text-gray-600">{sub}</span></span>
                       </span>
                     </td>
-                    <td className="px-8 py-6 text-gray-700">{date.format(new Date(e.created_at))} • {time.format(new Date(e.created_at))}</td>
-                    <td className="px-8 py-6 text-gray-900">#{e.reference}</td>
-                    <td className="px-8 py-6 text-gray-900">{money.format(Number(e.purchase_amount))}</td>
-                    <td className={`px-8 py-6 text-end font-semibold ${redeemed ? "text-red-600" : "text-brand"}`} dir="ltr">{e.points > 0 ? "+" : ""}{num.format(e.points)} {dict.common.pts}</td>
-                    <td className="px-8 py-6 text-end text-gray-700">{num.format(e.balance_after)}</td>
+                    <td className="whitespace-nowrap px-5 py-5 text-gray-700">{date.format(new Date(e.created_at))} • {time.format(new Date(e.created_at))}</td>
+                    <td className="whitespace-nowrap px-5 py-5 text-gray-900">#{e.reference}</td>
+                    <td className="whitespace-nowrap px-5 py-5 text-gray-900">{money.format(Number(e.purchase_amount))}</td>
+                    <td className={`whitespace-nowrap px-5 py-5 text-end font-semibold ${redeemed ? "text-red-600" : "text-brand"}`} dir="ltr">{e.points > 0 ? "+" : ""}{num.format(e.points)} {dict.common.pts}</td>
+                    <td className="whitespace-nowrap px-5 py-5 text-end text-gray-700">{num.format(e.balance_after)}</td>
                   </tr>
                 );
               })}
