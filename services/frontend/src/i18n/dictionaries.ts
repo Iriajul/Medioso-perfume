@@ -123,6 +123,32 @@ const en = {
     descriptionPlaceholder: "Describe the exclusivity and olfactory notes of this reward...", discard: "Discard", save: "Add Reward", update: "Save Changes",
     saving: "Saving…", edit: "Edit", delete: "Delete", confirmDelete: "Delete this reward?", deleteError: "Unable to delete the reward.",
   },
+  staff: {
+    title: "Staff Management", subtitle: "Manage your professional fragrance consultants across all global branches.", add: "Add New Staff",
+    overview: "Team Overview", total: "Total Staff", active: "Active Now", name: "Staff Name", branch: "Assigned Branch", role: "Role", actions: "Actions",
+    showing: "Showing {from}-{to} of {total} staff members", empty: "No staff members yet.", inactive: "Inactive",
+    newTitle: "Add New Staff", editTitle: "Edit Staff Member", modalSubtitle: "Onboard a new member to the luxury fragrance team.",
+    photo: "Profile Photograph", upload: "Upload", photoHint: "Recommended: Square headshot, min 400×400px. JPG or PNG.",
+    fullName: "Full Name", namePlaceholder: "e.g. Jean-Claude Ellena", email: "Email Address", emailPlaceholder: "staff@madperfume.com",
+    selectBranch: "Select branch...", rolePlaceholder: "e.g. Manager", status: "Operational Status", activeStatus: "Active",
+    inviteNote: "They'll receive an email to set their password.", cancel: "Cancel", save: "Add Staff Member", update: "Save Changes", saving: "Saving…",
+    edit: "Edit", delete: "Delete", confirmDelete: "Remove this staff member?", deleteError: "Unable to remove the staff member.",
+  },
+  notifications: {
+    title: "Notifications", subtitle: "Design and broadcast luxury announcements with high-performance delivery systems.", create: "Create Notification",
+    titleLabel: "Notification Title", titlePlaceholder: "e.g., Exclusive Preview: Midnight Jasmine", body: "Message Body",
+    bodyPlaceholder: "Craft a compelling message about your latest fragrance release...", recipients: "Recipients",
+    audiences: { all: "All Customers", silver: "Silver Members", gold: "Gold Members", platinum: "Platinum Members", diamond: "Diamond Members" },
+    send: "Send Notification", sending: "Sending…", success: "Notification queued for {count} recipients. Push delivery starts once the mobile app registers devices.",
+  },
+  settings: {
+    title: "Security Settings", subtitle: "Manage your account authentication and protect your fragrance boutique administration portal.",
+    updatePassword: "Update Password", updateHint: "Change your password regularly to ensure security.", current: "Current Password",
+    newPassword: "New Password", newPlaceholder: "Enter new secure password", requirements: "Security Requirements",
+    ruleLength: "Minimum 8 characters long", ruleSymbol: "At least one special character (!@#$%)", ruleNumber: "At least one number (0-9)",
+    confirm: "Confirm New Password", confirmPlaceholder: "Repeat new password", mismatch: "Passwords do not match.", cancel: "Cancel",
+    submit: "Update Password", submitting: "Updating…", lastChange: "Last password change:", never: "Not changed yet",
+  },
 };
 
 export type Dictionary = typeof en;
@@ -247,6 +273,32 @@ const ar: Dictionary = {
     descriptionPlaceholder: "صف تميز هذه المكافأة ونفحاتها العطرية...", discard: "تجاهل", save: "إضافة المكافأة", update: "حفظ التغييرات",
     saving: "جارٍ الحفظ…", edit: "تعديل", delete: "حذف", confirmDelete: "هل تريد حذف هذه المكافأة؟", deleteError: "تعذر حذف المكافأة.",
   },
+  staff: {
+    title: "إدارة الموظفين", subtitle: "أدر مستشاري العطور المحترفين في جميع فروعك حول العالم.", add: "إضافة موظف جديد",
+    overview: "نظرة على الفريق", total: "إجمالي الموظفين", active: "النشطون الآن", name: "اسم الموظف", branch: "الفرع المعين", role: "الدور", actions: "الإجراءات",
+    showing: "عرض {from}-{to} من {total} موظف", empty: "لا يوجد موظفون بعد.", inactive: "غير نشط",
+    newTitle: "إضافة موظف جديد", editTitle: "تعديل بيانات الموظف", modalSubtitle: "انضمام عضو جديد إلى فريق العطور الفاخرة.",
+    photo: "الصورة الشخصية", upload: "رفع", photoHint: "يُنصح بصورة مربعة للوجه، 400×400 بكسل على الأقل. JPG أو PNG.",
+    fullName: "الاسم الكامل", namePlaceholder: "مثال: جان كلود إيلينا", email: "البريد الإلكتروني", emailPlaceholder: "staff@madperfume.com",
+    selectBranch: "اختر الفرع...", rolePlaceholder: "مثال: مدير", status: "الحالة التشغيلية", activeStatus: "نشط",
+    inviteNote: "سيتلقى بريداً إلكترونياً لتعيين كلمة المرور.", cancel: "إلغاء", save: "إضافة الموظف", update: "حفظ التغييرات", saving: "جارٍ الحفظ…",
+    edit: "تعديل", delete: "حذف", confirmDelete: "هل تريد إزالة هذا الموظف؟", deleteError: "تعذر إزالة الموظف.",
+  },
+  notifications: {
+    title: "الإشعارات", subtitle: "صمم وأرسل إعلانات فاخرة عبر أنظمة توصيل عالية الأداء.", create: "إنشاء إشعار",
+    titleLabel: "عنوان الإشعار", titlePlaceholder: "مثال: عرض حصري: ياسمين منتصف الليل", body: "نص الرسالة",
+    bodyPlaceholder: "اكتب رسالة جذابة عن أحدث إصدارات العطور...", recipients: "المستلمون",
+    audiences: { all: "جميع العملاء", silver: "الأعضاء الفضيون", gold: "الأعضاء الذهبيون", platinum: "الأعضاء البلاتينيون", diamond: "الأعضاء الماسيون" },
+    send: "إرسال الإشعار", sending: "جارٍ الإرسال…", success: "تمت جدولة الإشعار لـ {count} مستلم. يبدأ الإرسال الفوري بعد تسجيل الأجهزة في تطبيق الجوال.",
+  },
+  settings: {
+    title: "إعدادات الأمان", subtitle: "أدر مصادقة حسابك واحمِ بوابة إدارة بوتيك العطور.",
+    updatePassword: "تحديث كلمة المرور", updateHint: "غيّر كلمة المرور بانتظام لضمان الأمان.", current: "كلمة المرور الحالية",
+    newPassword: "كلمة المرور الجديدة", newPlaceholder: "أدخل كلمة مرور جديدة آمنة", requirements: "متطلبات الأمان",
+    ruleLength: "8 أحرف على الأقل", ruleSymbol: "رمز خاص واحد على الأقل (!@#$%)", ruleNumber: "رقم واحد على الأقل (0-9)",
+    confirm: "تأكيد كلمة المرور الجديدة", confirmPlaceholder: "أعد إدخال كلمة المرور الجديدة", mismatch: "كلمتا المرور غير متطابقتين.", cancel: "إلغاء",
+    submit: "تحديث كلمة المرور", submitting: "جارٍ التحديث…", lastChange: "آخر تغيير لكلمة المرور:", never: "لم تُغيَّر بعد",
+  },
 };
 
 const he: Dictionary = {
@@ -368,6 +420,32 @@ const he: Dictionary = {
     selectCategory: "בחרו קטגוריה...", eligibilityLabel: "דרגות זכאיות", description: "תיאור קצר",
     descriptionPlaceholder: "תארו את הבלעדיות ותווי הריח של ההטבה...", discard: "ביטול", save: "הוספת הטבה", update: "שמירת שינויים",
     saving: "שומר…", edit: "עריכה", delete: "מחיקה", confirmDelete: "למחוק את ההטבה?", deleteError: "לא ניתן למחוק את ההטבה.",
+  },
+  staff: {
+    title: "ניהול צוות", subtitle: "נהלו את יועצי הבשמים המקצועיים שלכם בכל הסניפים בעולם.", add: "הוספת איש צוות",
+    overview: "סקירת צוות", total: "סה״כ צוות", active: "פעילים כעת", name: "שם איש הצוות", branch: "סניף משויך", role: "תפקיד", actions: "פעולות",
+    showing: "מציג {from}-{to} מתוך {total} אנשי צוות", empty: "אין אנשי צוות עדיין.", inactive: "לא פעיל",
+    newTitle: "הוספת איש צוות", editTitle: "עריכת איש צוות", modalSubtitle: "צירוף חבר חדש לצוות הבשמים היוקרתי.",
+    photo: "תמונת פרופיל", upload: "העלאה", photoHint: "מומלץ: תמונת פנים מרובעת, לפחות 400×400 פיקסלים. JPG או PNG.",
+    fullName: "שם מלא", namePlaceholder: "לדוגמה: ז׳אן-קלוד אלנה", email: "כתובת אימייל", emailPlaceholder: "staff@madperfume.com",
+    selectBranch: "בחרו סניף...", rolePlaceholder: "לדוגמה: מנהל", status: "סטטוס תפעולי", activeStatus: "פעיל",
+    inviteNote: "יישלח אליו אימייל להגדרת סיסמה.", cancel: "ביטול", save: "הוספת איש צוות", update: "שמירת שינויים", saving: "שומר…",
+    edit: "עריכה", delete: "מחיקה", confirmDelete: "להסיר את איש הצוות?", deleteError: "לא ניתן להסיר את איש הצוות.",
+  },
+  notifications: {
+    title: "התראות", subtitle: "עצבו ושדרו הודעות יוקרה עם מערכות מסירה בביצועים גבוהים.", create: "יצירת התראה",
+    titleLabel: "כותרת ההתראה", titlePlaceholder: "לדוגמה: תצוגה בלעדית: יסמין חצות", body: "תוכן ההודעה",
+    bodyPlaceholder: "כתבו הודעה משכנעת על השקת הבושם האחרון...", recipients: "נמענים",
+    audiences: { all: "כל הלקוחות", silver: "חברי כסף", gold: "חברי זהב", platinum: "חברי פלטינה", diamond: "חברי יהלום" },
+    send: "שליחת התראה", sending: "שולח…", success: "ההתראה תוזמנה ל-{count} נמענים. שליחת הפוש תתחיל לאחר רישום מכשירים באפליקציה.",
+  },
+  settings: {
+    title: "הגדרות אבטחה", subtitle: "נהלו את אימות החשבון והגנו על פורטל ניהול בוטיק הבשמים.",
+    updatePassword: "עדכון סיסמה", updateHint: "החליפו סיסמה באופן קבוע כדי לשמור על אבטחה.", current: "סיסמה נוכחית",
+    newPassword: "סיסמה חדשה", newPlaceholder: "הזינו סיסמה חדשה ומאובטחת", requirements: "דרישות אבטחה",
+    ruleLength: "לפחות 8 תווים", ruleSymbol: "לפחות תו מיוחד אחד (!@#$%)", ruleNumber: "לפחות ספרה אחת (0-9)",
+    confirm: "אימות סיסמה חדשה", confirmPlaceholder: "הזינו שוב את הסיסמה החדשה", mismatch: "הסיסמאות אינן תואמות.", cancel: "ביטול",
+    submit: "עדכון סיסמה", submitting: "מעדכן…", lastChange: "שינוי סיסמה אחרון:", never: "טרם שונתה",
   },
 };
 
