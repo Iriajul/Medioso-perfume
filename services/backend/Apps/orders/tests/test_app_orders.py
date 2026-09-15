@@ -79,7 +79,8 @@ class AppOrderTests(APITestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(Order.objects.count(), 0)
 
-    @patch("Apps.orders.api.app.stripe.PaymentMethod.retrieve", return_value=SimpleNamespace(card=SimpleNamespace(last4="4242"), get=lambda k: True))
+    # Real SDK objects (not dicts), as Stripe returns them.
+    @patch("Apps.orders.api.app.stripe.PaymentMethod.retrieve", return_value=stripe.PaymentMethod.construct_from({"id": "pm_1", "card": {"last4": "4242"}}, "sk_test"))
     @patch("Apps.orders.api.app.stripe.Webhook.construct_event")
     @patch("Apps.orders.api.app.stripe.PaymentIntent.create", return_value=SimpleNamespace(id="pi_123", client_secret="pi_123_secret"))
     def test_card_checkout_and_webhook(self, create_intent, construct_event, retrieve_method):
@@ -90,7 +91,8 @@ class AppOrderTests(APITestCase):
         self.assertEqual(create_intent.call_args.kwargs["idempotency_key"], f"order-{data['id']}-payment")
         self.assertEqual(len(mail.outbox), 0)  # invoice waits for the payment
 
-        construct_event.return_value = {"type": "payment_intent.succeeded", "data": {"object": {"id": "pi_123", "payment_method": "pm_1"}}}
+        construct_event.return_value = stripe.Event.construct_from(
+            {"id": "evt_1", "type": "payment_intent.succeeded", "data": {"object": {"id": "pi_123", "object": "payment_intent", "payment_method": "pm_1"}}}, "sk_test")
         self.client.credentials()
         with self.captureOnCommitCallbacks(execute=True):
             self.assertEqual(self.client.post(reverse("v1:orders:stripe-webhook"), b"{}", content_type="application/json").status_code, 200)

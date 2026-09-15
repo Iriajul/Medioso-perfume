@@ -225,7 +225,7 @@ class StripeWebhookView(generics.GenericAPIView):
                 if order:
                     method = stripe.PaymentMethod.retrieve(intent["payment_method"], api_key=settings.STRIPE_SECRET_KEY)
                     order.status = Order.Status.PAID
-                    order.card_last4 = method.card.last4 if method.get("card") else ""
+                    order.card_last4 = method.card.last4 if getattr(method, "card", None) else ""
                     order.save(update_fields=["status", "card_last4", "updated_at"])
                     OrderStatusEvent.objects.create(order=order, status=Order.Status.PAID)
                     transaction.on_commit(lambda: send_invoice(order.pk))
