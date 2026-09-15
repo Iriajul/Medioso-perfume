@@ -4,7 +4,8 @@ import Pagination from "@/components/pagination";
 import { getDictionary, getLang } from "@/i18n/server";
 import { apiGet } from "@/lib/session";
 import CategoryDialog from "./category-dialog";
-import DeleteButton from "./delete-button";
+import DeleteButton from "@/components/delete-button";
+import { deleteCategory } from "./actions";
 
 export type Category = {
   id: number;
@@ -77,7 +78,7 @@ export default async function CategoriesPage({ searchParams }: PageProps<"/categ
                     <td className="px-8 py-4">
                       <div className="flex items-center gap-5">
                         <CategoryDialog t={t} category={c} />
-                        <DeleteButton id={c.id} label={t.delete} confirmText={t.confirmDelete} errorText={t.deleteError} />
+                        <DeleteButton action={deleteCategory.bind(null, c.id)} label={t.delete} confirmText={t.confirmDelete} errorText={t.deleteError} />
                       </div>
                     </td>
                   </tr>

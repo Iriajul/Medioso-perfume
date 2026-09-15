@@ -1,20 +1,13 @@
-from io import BytesIO
 from unittest.mock import patch
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
-from PIL import Image
 from rest_framework.test import APITestCase
 from rest_framework_simplejwt.tokens import AccessToken
 
 from Apps.accounts.models import User
 from Apps.catalog.models import Category
-
-
-def png(name="cat.png"):
-    buf = BytesIO()
-    Image.new("RGB", (4, 4), "white").save(buf, "PNG")
-    return SimpleUploadedFile(name, buf.getvalue(), content_type="image/png")
+from Apps.common.testing import png
 
 
 @patch("Apps.common.media.cloudinary.uploader.destroy")

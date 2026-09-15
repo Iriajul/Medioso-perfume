@@ -34,3 +34,14 @@ export async function apiErrors(res: Response | null, fallback: string) {
   const errors = Object.values(body).flat().map(String);
   return errors.length ? errors : [fallback];
 }
+
+export type SaveState = { ok?: true; errors?: string[] } | undefined;
+
+/** Creates (POST) or updates (PATCH) an admin resource from a multipart form. */
+export async function saveForm(collection: string, id: number | null, formData: FormData): Promise<SaveState> {
+  // An empty file input still submits a 0-byte file; don't send it.
+  for (const [key, value] of [...formData.entries()]) if (value instanceof File && value.size === 0) formData.delete(key);
+
+  const res = await apiFetch(id ? `${collection}${id}/` : collection, { method: id ? "PATCH" : "POST", body: formData });
+  return res?.ok ? { ok: true } : { errors: await apiErrors(res, "Unable to save.") };
+}

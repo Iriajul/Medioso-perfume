@@ -1,10 +1,11 @@
 "use client";
 
 import Image from "next/image";
-import { useActionState, useRef, useState } from "react";
+import { startTransition, useActionState, useRef, useState } from "react";
 import { ArrowRight, FileUp, Plus, Shapes, SquarePen, X } from "lucide-react";
 import type { Dictionary } from "@/i18n/dictionaries";
-import { saveCategory, type SaveState } from "./actions";
+import type { SaveState } from "@/lib/session";
+import { saveCategory } from "./actions";
 import type { Category } from "./page";
 
 const field = "w-full rounded-xl border border-gray-300 px-4 py-3 text-base text-gray-900 placeholder:text-gray-300 outline-none focus:border-brand-light";
@@ -57,7 +58,11 @@ export default function CategoryDialog({ t, category }: { t: Dictionary["categor
           <button type="button" onClick={close} aria-label="Close" className="text-gray-600"><X className="size-6" /></button>
         </div>
 
-        <form ref={form} action={action} className="space-y-6 px-8 py-8">
+        <form
+          ref={form}
+          // onSubmit (not action=) so a failed save keeps what the admin typed.
+          onSubmit={(e) => { e.preventDefault(); const data = new FormData(e.currentTarget); startTransition(() => action(data)); }}
+          className="space-y-6 px-8 py-8">
           <div>
             <p className="text-base text-gray-700">{t.imageLabel}</p>
             <label className="relative mt-3 flex h-44 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-gray-300 text-center">

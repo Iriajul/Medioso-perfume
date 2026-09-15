@@ -34,6 +34,20 @@ const en = {
     confirmDelete: "Delete this category?", saveError: "Unable to save the category.", deleteError: "Unable to delete the category.",
     types: { classic: "Classic", premium: "Premium", exotic: "Exotic", seasonal: "Seasonal", niche: "Niche" },
   },
+  branches: {
+    title: "Boutique Network", subtitle: "Manage your global presence and flagship boutiques with precision. Monitor locations, contacts, and performance metrics.",
+    add: "Add New Branch", total: "Total Branches", thisQuarter: "+{n} this quarter", directory: "Branch Directory",
+    name: "Branch Name", address: "Address", phone: "Contact Number", actions: "Actions",
+    empty: "No branches yet. Add your first boutique.", loadError: "Couldn't load branches. Please refresh.",
+    showing: "Showing {from} to {to} of {total} branches",
+    newTitle: "Add New Branch", editTitle: "Edit Branch", modalSubtitle: "Register a new luxury location to the global MAD PERFUME network.",
+    imageLabel: "Boutique Image Upload", upload: "Drag and drop high-resolution imagery", uploadHint: "PNG, JPG or WEBP up to 10MB (16:9 ratio recommended)", selectFiles: "Select Files",
+    namePlaceholder: "e.g., Paris Flagship", fullAddress: "Full Address", addressPlaceholder: "Enter the complete street address, city, and postal code...",
+    hours: "Operating Hours", weekdays: "Monday – Saturday", sunday: "Sunday & Holidays",
+    location: "Map Location (optional)", latitude: "Latitude", longitude: "Longitude",
+    save: "Add branch", update: "Save changes", saving: "Saving…", edit: "Edit", delete: "Delete",
+    confirmDelete: "Delete this branch?", deleteError: "Unable to delete the branch.",
+  },
 };
 
 export type Dictionary = typeof en;
@@ -69,6 +83,20 @@ const ar: Dictionary = {
     confirmDelete: "هل تريد حذف هذه الفئة؟", saveError: "تعذر حفظ الفئة.", deleteError: "تعذر حذف الفئة.",
     types: { classic: "كلاسيكي", premium: "فاخر", exotic: "غريب", seasonal: "موسمي", niche: "حصري" },
   },
+  branches: {
+    title: "شبكة البوتيكات", subtitle: "أدر حضورك العالمي وبوتيكاتك الرئيسية بدقة. تابع المواقع وجهات الاتصال ومؤشرات الأداء.",
+    add: "إضافة فرع جديد", total: "إجمالي الفروع", thisQuarter: "+{n} هذا الربع", directory: "دليل الفروع",
+    name: "اسم الفرع", address: "العنوان", phone: "رقم الاتصال", actions: "الإجراءات",
+    empty: "لا توجد فروع بعد. أضف أول بوتيك.", loadError: "تعذر تحميل الفروع. يرجى التحديث.",
+    showing: "عرض {from} إلى {to} من {total} فرع",
+    newTitle: "إضافة فرع جديد", editTitle: "تعديل الفرع", modalSubtitle: "سجّل موقعاً فاخراً جديداً في شبكة MAD PERFUME العالمية.",
+    imageLabel: "رفع صورة البوتيك", upload: "اسحب وأفلت صوراً عالية الدقة", uploadHint: "PNG أو JPG أو WEBP حتى 10 ميغابايت (يُفضل 16:9)", selectFiles: "اختيار الملفات",
+    namePlaceholder: "مثال: الفرع الرئيسي في باريس", fullAddress: "العنوان الكامل", addressPlaceholder: "أدخل عنوان الشارع والمدينة والرمز البريدي...",
+    hours: "ساعات العمل", weekdays: "الاثنين – السبت", sunday: "الأحد والعطلات",
+    location: "الموقع على الخريطة (اختياري)", latitude: "خط العرض", longitude: "خط الطول",
+    save: "إضافة الفرع", update: "حفظ التغييرات", saving: "جارٍ الحفظ…", edit: "تعديل", delete: "حذف",
+    confirmDelete: "هل تريد حذف هذا الفرع؟", deleteError: "تعذر حذف الفرع.",
+  },
 };
 
 const he: Dictionary = {
@@ -101,6 +129,20 @@ const he: Dictionary = {
     discard: "ביטול", save: "שמירת קטגוריה", saving: "שומר…", edit: "עריכה", delete: "מחיקה",
     confirmDelete: "למחוק את הקטגוריה?", saveError: "לא ניתן לשמור את הקטגוריה.", deleteError: "לא ניתן למחוק את הקטגוריה.",
     types: { classic: "קלאסי", premium: "פרימיום", exotic: "אקזוטי", seasonal: "עונתי", niche: "נישה" },
+  },
+  branches: {
+    title: "רשת הבוטיקים", subtitle: "נהלו את הנוכחות הגלובלית ואת בוטיקי הדגל שלכם בדיוק. עקבו אחר מיקומים, אנשי קשר ומדדי ביצוע.",
+    add: "הוספת סניף חדש", total: "סה״כ סניפים", thisQuarter: "+{n} ברבעון זה", directory: "מדריך סניפים",
+    name: "שם הסניף", address: "כתובת", phone: "מספר טלפון", actions: "פעולות",
+    empty: "אין סניפים עדיין. הוסיפו את הבוטיק הראשון.", loadError: "לא ניתן לטעון סניפים. נא לרענן.",
+    showing: "מציג {from} עד {to} מתוך {total} סניפים",
+    newTitle: "הוספת סניף חדש", editTitle: "עריכת סניף", modalSubtitle: "רשמו מיקום יוקרה חדש ברשת MAD PERFUME הגלובלית.",
+    imageLabel: "העלאת תמונת בוטיק", upload: "גררו ושחררו תמונות באיכות גבוהה", uploadHint: "PNG, JPG או WEBP עד 10MB (מומלץ יחס 16:9)", selectFiles: "בחירת קבצים",
+    namePlaceholder: "לדוגמה: סניף הדגל בפריז", fullAddress: "כתובת מלאה", addressPlaceholder: "הזינו כתובת רחוב מלאה, עיר ומיקוד...",
+    hours: "שעות פעילות", weekdays: "שני – שבת", sunday: "ראשון וחגים",
+    location: "מיקום במפה (אופציונלי)", latitude: "קו רוחב", longitude: "קו אורך",
+    save: "הוספת סניף", update: "שמירת שינויים", saving: "שומר…", edit: "עריכה", delete: "מחיקה",
+    confirmDelete: "למחוק את הסניף?", deleteError: "לא ניתן למחוק את הסניף.",
   },
 };
 
