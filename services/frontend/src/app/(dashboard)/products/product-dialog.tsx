@@ -84,6 +84,20 @@ export default function ProductDialog({ t, categories, branches, product }: Prop
               <label className="block"><span className={label}>{t.stockUnits}</span>
                 <input name="stock" type="number" required min="0" step="1" defaultValue={product?.stock ?? 0} className={`${field} mt-3`} dir="ltr" />
               </label>
+              <label className="block"><span className={label}>{t.brand}</span>
+                <input name="brand" required maxLength={100} defaultValue={product?.brand ?? "MAD PERFUME"} className={`${field} mt-3`} />
+              </label>
+              <label className="block"><span className={label}>{t.concentration}</span>
+                <select name="concentration" defaultValue={product?.concentration ?? "eau_de_parfum"} className={`${field} mt-3`}>
+                  {Object.entries(t.concentrations).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                </select>
+              </label>
+              <label className="block"><span className={label}>{t.size}</span>
+                <input name="size" maxLength={30} defaultValue={product?.size} placeholder={t.sizePlaceholder} className={`${field} mt-3`} />
+              </label>
+              <label className="block"><span className={label}>{t.scentNotes}</span>
+                <input name="notes" maxLength={255} defaultValue={product?.notes} placeholder={t.notesPlaceholder} className={`${field} mt-3`} />
+              </label>
             </div>
 
             <div>

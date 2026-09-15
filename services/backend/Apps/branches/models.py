@@ -4,7 +4,11 @@ from django.db import models
 class Branch(models.Model):
     name = models.CharField(max_length=100, unique=True)
     address = models.TextField()
+    city = models.CharField(max_length=100, blank=True)
+    country = models.CharField(max_length=100, blank=True)
     phone = models.CharField(max_length=30)
+    email = models.EmailField(blank=True)
+    is_flagship = models.BooleanField(default=False)
     weekday_opens = models.TimeField(help_text="Monday – Saturday")
     weekday_closes = models.TimeField()
     sunday_opens = models.TimeField(help_text="Sunday & holidays")

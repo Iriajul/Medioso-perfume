@@ -94,6 +94,23 @@ export default function BranchDialog({ t, branch }: { t: Dictionary["branches"];
             </div>
           </div>
 
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <label className="block"><span className={label}>{t.city}</span>
+              <input name="city" maxLength={100} defaultValue={branch?.city} className={`${field} mt-3`} />
+            </label>
+            <label className="block"><span className={label}>{t.country}</span>
+              <input name="country" maxLength={100} defaultValue={branch?.country} className={`${field} mt-3`} />
+            </label>
+            <label className="block"><span className={label}>{t.branchEmail}</span>
+              <input name="email" type="email" defaultValue={branch?.email} className={`${field} mt-3`} dir="ltr" />
+            </label>
+          </div>
+
+          <label className="flex items-center gap-3 text-sm text-gray-800">
+            <input type="checkbox" name="is_flagship" value="true" defaultChecked={branch?.is_flagship} className="size-5 accent-blue-700" />
+            {t.flagship}
+          </label>
+
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <label className="block">
               <span className={label}>{t.phone}</span>

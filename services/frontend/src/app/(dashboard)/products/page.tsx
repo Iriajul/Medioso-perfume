@@ -9,7 +9,7 @@ import ProductDialog from "./product-dialog";
 
 export type Option = { id: number; name: string };
 export type Product = {
-  id: number; sku: string; name: string; category: number; category_name: string; price: string; stock: number;
+  id: number; sku: string; name: string; brand: string; concentration: string; size: string; notes: string; category: number; category_name: string; price: string; stock: number;
   description: string; is_featured: boolean; branches: number[]; image_urls: (string | null)[];
 };
 export type Banner = {

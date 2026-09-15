@@ -1,3 +1,5 @@
+from django.conf import settings
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils import timezone
 
@@ -27,7 +29,19 @@ class Category(models.Model):
 
 
 class Product(models.Model):
+    class Concentration(models.TextChoices):
+        EAU_DE_PARFUM = "eau_de_parfum", "Eau de Parfum"
+        EAU_DE_TOILETTE = "eau_de_toilette", "Eau de Toilette"
+        EXTRAIT = "extrait_de_parfum", "Extrait de Parfum"
+        COLOGNE = "cologne", "Cologne"
+        PERFUME_OIL = "perfume_oil", "Perfume Oil"
+        HOME = "home_fragrance", "Home Fragrance"
+
     name = models.CharField(max_length=150)
+    brand = models.CharField(max_length=100, default="MAD PERFUME")
+    concentration = models.CharField(max_length=20, choices=Concentration.choices, default=Concentration.EAU_DE_PARFUM)
+    size = models.CharField(max_length=30, blank=True, help_text='e.g. "100ml" or "300g"')
+    notes = models.CharField(max_length=255, blank=True, help_text="Comma-separated scent notes, e.g. Oud, Bergamot, White Musk")
     category = models.ForeignKey(Category, on_delete=models.PROTECT, related_name="products")
     price = models.DecimalField(max_digits=10, decimal_places=2)
     stock = models.PositiveIntegerField(default=0)
@@ -48,6 +62,10 @@ class Product(models.Model):
     @property
     def sku(self):
         return f"MAD-{self.pk:03d}"
+
+    @property
+    def notes_list(self):
+        return [n.strip() for n in self.notes.split(",") if n.strip()]
 
 
 class Banner(models.Model):
@@ -74,3 +92,27 @@ class Banner(models.Model):
         if today < self.starts_on:
             return "scheduled"
         return "ended" if today > self.ends_on else "active"
+
+
+class Review(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="reviews")
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="reviews")
+    rating = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
+    comment = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        constraints = [models.UniqueConstraint(fields=["product", "user"], name="one_review_per_product")]
+
+
+class SavedProduct(models.Model):
+    """Customer wishlist ("Saved Items")."""
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="saved_products")
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="+")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        constraints = [models.UniqueConstraint(fields=["user", "product"], name="unique_saved_product")]

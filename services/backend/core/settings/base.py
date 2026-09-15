@@ -49,6 +49,7 @@ THIRD_PARTY_APPS = [
     "rest_framework",
     "rest_framework_simplejwt.token_blacklist",
     "drf_spectacular",
+    "django_filters",
 ]
 
 # Local apps live under the `Apps` package. Append feature apps here as they land
@@ -256,8 +257,17 @@ cloudinary.config(
 )
 CLOUDINARY_FOLDER = env("CLOUDINARY_FOLDER", default="madperfume")
 
-# Loyalty: points earned per $1 spent.
-POINTS_PER_DOLLAR = env.int("POINTS_PER_DOLLAR", default=1)
+# Loyalty: points earned per $1 spent, per channel, and per product review.
+POINTS_PER_DOLLAR_APP = env.int("POINTS_PER_DOLLAR_APP", default=5)
+POINTS_PER_DOLLAR_BRANCH = env.int("POINTS_PER_DOLLAR_BRANCH", default=3)
+REVIEW_POINTS = env.int("REVIEW_POINTS", default=50)
+
+# App checkout.
+TAX_RATE = env("TAX_RATE", default="0.08")
+SHIPPING_FEE = env("SHIPPING_FEE", default="0.00")
+DELIVERY_DAYS = env.int("DELIVERY_DAYS", default=3)
+STRIPE_SECRET_KEY = env("STRIPE_SECRET_KEY", default="")
+STRIPE_WEBHOOK_SECRET = env("STRIPE_WEBHOOK_SECRET", default="")
 
 # Admin dashboard base URL, used in password reset links.
 ADMIN_URL = env("ADMIN_URL", default="http://localhost:3000")

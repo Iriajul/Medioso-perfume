@@ -6,6 +6,8 @@ import { apiFetch, saveForm, type SaveState } from "@/lib/session";
 const API = "/api/v1/admin/branches/";
 
 export async function saveBranch(id: number | null, _: SaveState, formData: FormData) {
+  // Unchecked checkboxes are not submitted at all; send an explicit value.
+  formData.set("is_flagship", formData.get("is_flagship") ? "true" : "false");
   const result = await saveForm(API, id, formData);
   if (result?.ok) revalidatePath("/branches");
   return result;

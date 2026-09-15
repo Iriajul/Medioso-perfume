@@ -38,6 +38,13 @@ class User(AbstractBaseUser, PermissionsMixin):
     job_title = models.CharField(max_length=30, choices=StaffRole.choices, blank=True)
     password_changed_at = models.DateTimeField(null=True, blank=True)
 
+    # App preferences.
+    language = models.CharField(max_length=2, choices=[("en", "English"), ("ar", "Arabic"), ("he", "Hebrew")], default="en")
+    push_enabled = models.BooleanField(default=True)
+    notify_collections = models.BooleanField(default=True)
+    notify_rewards = models.BooleanField(default=True)
+    notify_orders = models.BooleanField(default=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -48,6 +55,10 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     class Meta:
         ordering = ["-created_at"]
+        constraints = [
+            # Phone is a login identifier in the app, so it must be unique when set.
+            models.UniqueConstraint(fields=["phone"], condition=~models.Q(phone=""), name="unique_phone_when_set"),
+        ]
 
     def __str__(self):
         return self.email
@@ -56,3 +67,24 @@ class User(AbstractBaseUser, PermissionsMixin):
         super().set_password(raw_password)
         if raw_password is not None:
             self.password_changed_at = timezone.now()
+
+
+class PasswordResetCode(models.Model):
+    """6-digit code emailed for the app's password reset (stored hashed)."""
+
+    MAX_ATTEMPTS = 5
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="reset_codes")
+    code_hash = models.CharField(max_length=128)
+    attempts = models.PositiveSmallIntegerField(default=0)
+    expires_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+class DeviceToken(models.Model):
+    """FCM registration token for push notifications."""
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="device_tokens")
+    token = models.CharField(max_length=255, unique=True)
+    platform = models.CharField(max_length=10, choices=[("ios", "iOS"), ("android", "Android")])
+    created_at = models.DateTimeField(auto_now_add=True)

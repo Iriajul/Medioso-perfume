@@ -60,7 +60,7 @@ class OrderApiTests(AdminApiTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual([e["status"] for e in response.json()["events"]], ["processing", "shipped", "delivered", "shipped", "delivered"])
         self.sophia.refresh_from_db()
-        self.assertEqual((self.sophia.points_balance, self.sophia.lifetime_points), (200, 200))
+        self.assertEqual((self.sophia.points_balance, self.sophia.lifetime_points), (1000, 1000))  # $200 x5
         self.assertEqual(LoyaltyTransaction.objects.filter(order=order).count(), 1)
 
     def test_invalid_status_rejected(self):
@@ -75,14 +75,14 @@ class OrderApiTests(AdminApiTestCase):
         response = self.client.post(reverse("v1:orders:order-register-in-store"), payload)
 
         self.assertEqual(response.status_code, 201, response.json())
-        self.assertEqual((response.json()["points"], response.json()["balance"]), (420, 420))
+        self.assertEqual((response.json()["points"], response.json()["balance"]), (1262, 1262))
         entry = LoyaltyTransaction.objects.get()
         self.assertEqual((entry.channel, entry.branch, entry.purchase_amount, entry.balance_after, entry.created_by),
-                         ("branch", self.paris, Decimal("420.75"), 420, self.admin))
+                         ("branch", self.paris, Decimal("420.75"), 1262, self.admin))
 
         with self.assertNumQueries(2):
             recent = self.client.get(reverse("v1:orders:order-recent-in-store")).json()
-        self.assertEqual((recent["points_per_dollar"], recent["results"][0]["customer_name"], recent["results"][0]["points"]), (1, "Julian Marc", 420))
+        self.assertEqual((recent["points_per_dollar"], recent["results"][0]["customer_name"], recent["results"][0]["points"]), (3, "Julian Marc", 1262))
         self.assertEqual(recent["results"][1]["customer_name"], "Sophia Chen")  # newest first
 
 
@@ -103,7 +103,7 @@ class CustomerApiTests(AdminApiTestCase):
         self.assertEqual((data["lifetime_spend"], data["avg_order_value"]), ("400.00", "200.00"))
         self.assertEqual((len(data["orders"]), len(data["orders"][0]["images"])), (2, 2))
         self.assertEqual(data["loyalty_history"][0]["reference"], order.number)
-        self.assertEqual((data["next_tier"], data["tier_progress"]), ("gold", int(order.total * 100 / 2500)))
+        self.assertEqual((data["next_tier"], data["tier_progress"]), ("gold", int(order.total * 5 * 100 / 2500)))  # 5 pts/$ in app
 
     def test_lookup_by_email(self):
         self.assertEqual(self.client.get(reverse("v1:accounts:customer-lookup"), {"email": "JULIAN@example.com"}).json()["id"], self.julian.pk)
@@ -117,13 +117,13 @@ class LoyaltyTests(AdminApiTestCase):
 
     def test_redeem_checks_balance(self):
         reward = Reward.objects.create(name="Gift Wrap", points_required=150, category="service", image_url="https://x/r.png", image_public_id="r/1")
-        loyalty.earn_for_order(Order.objects.filter(customer=self.julian).first())  # +300
+        loyalty.earn_for_order(Order.objects.filter(customer=self.julian).first())  # $300 app order x5 = +1500
         entry = loyalty.redeem(self.julian, reward, channel="branch", branch=self.paris)
-        self.assertEqual((entry.points, entry.balance_after), (-150, 150))
+        self.assertEqual((entry.points, entry.balance_after, entry.reason), (-150, 1350, "reward"))
         with self.assertRaises(Exception):
-            loyalty.redeem(self.julian, Reward(points_required=1000, pk=reward.pk), channel="app")
+            loyalty.redeem(self.julian, Reward(points_required=5000, pk=reward.pk), channel="app")
         self.julian.refresh_from_db()
-        self.assertEqual((self.julian.points_balance, self.julian.lifetime_points), (150, 300))
+        self.assertEqual((self.julian.points_balance, self.julian.lifetime_points), (1350, 1500))
 
     @patch("Apps.common.media.cloudinary.uploader.upload", return_value={"secure_url": "https://x/r.png", "public_id": "r/new"})
     def test_rewards_crud_and_redemption_stats(self, upload):

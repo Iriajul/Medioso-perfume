@@ -1,10 +1,11 @@
+from django.db import transaction
 from rest_framework import mixins, serializers
 from rest_framework.permissions import IsAdminUser
 from rest_framework.viewsets import GenericViewSet
 
 from Apps.accounts.models import User
 from Apps.loyalty.services import TIERS
-from Apps.notifications.models import Notification
+from Apps.notifications.models import Notification, UserNotification
 
 
 def audience_queryset(audience):
@@ -24,9 +25,19 @@ class NotificationSerializer(serializers.ModelSerializer):
         fields = ["id", "title", "body", "audience", "recipients_count", "status", "created_at"]
         read_only_fields = ["recipients_count", "status", "created_at"]
 
+    @transaction.atomic
     def create(self, validated_data):
-        validated_data["recipients_count"] = audience_queryset(validated_data["audience"]).count()
-        return super().create({**validated_data, "created_by": self.context["request"].user})
+        recipients = list(audience_queryset(validated_data["audience"]).values_list("pk", flat=True))
+        broadcast = super().create({
+            **validated_data, "recipients_count": len(recipients), "status": Notification.Status.SENT,
+            "created_by": self.context["request"].user,
+        })
+        UserNotification.objects.bulk_create(
+            (UserNotification(user_id=pk, broadcast=broadcast, category=UserNotification.Category.OFFERS,
+                              title=broadcast.title, body=broadcast.body) for pk in recipients),
+            batch_size=1000,
+        )
+        return broadcast
 
 
 class NotificationViewSet(mixins.CreateModelMixin, mixins.ListModelMixin, GenericViewSet):
