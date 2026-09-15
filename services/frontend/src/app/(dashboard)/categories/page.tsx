@@ -78,7 +78,7 @@ export default async function CategoriesPage({ searchParams }: PageProps<"/categ
                     <td className="px-8 py-4">
                       <div className="flex items-center gap-5">
                         <CategoryDialog t={t} category={c} />
-                        <DeleteButton action={deleteCategory.bind(null, c.id)} label={t.delete} confirmText={t.confirmDelete} errorText={t.deleteError} />
+                        <DeleteButton action={deleteCategory.bind(null, c.id)} label={t.delete} cancelText={dict.common.cancel} confirmText={t.confirmDelete} errorText={t.deleteError} />
                       </div>
                     </td>
                   </tr>

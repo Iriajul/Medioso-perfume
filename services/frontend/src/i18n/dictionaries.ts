@@ -75,7 +75,7 @@ const en = {
     status: { pending_payment: "Pending Payment", paid: "Payment Confirmed", processing: "Processing", shipped: "Shipped", delivered: "Delivered", cancelled: "Cancelled", in_store: "In Store Purchase" },
     tiers: { silver: "Silver", gold: "Gold", platinum: "Platinum", diamond: "Diamond" },
     channels: { app: "Mobile App", branch: "Physical Branch" },
-    pts: "pts", points: "Points", viewDetails: "View details", loadError: "Couldn't load data. Please refresh.", showingOf: "Showing {count} of {total} {noun}",
+    pts: "pts", points: "Points", cancel: "Cancel", viewDetails: "View details", loadError: "Couldn't load data. Please refresh.", showingOf: "Showing {count} of {total} {noun}",
   },
   customers: {
     title: "Customers", subtitle: "Manage and view your global luxury client base.", activeClients: "Total Active Clients", premiumFocus: "Premium Tier focus",
@@ -225,7 +225,7 @@ const ar: Dictionary = {
     status: { pending_payment: "بانتظار الدفع", paid: "تم تأكيد الدفع", processing: "قيد المعالجة", shipped: "تم الشحن", delivered: "تم التسليم", cancelled: "ملغى", in_store: "شراء من المتجر" },
     tiers: { silver: "فضي", gold: "ذهبي", platinum: "بلاتيني", diamond: "ماسي" },
     channels: { app: "تطبيق الجوال", branch: "فرع فعلي" },
-    pts: "نقطة", points: "نقاط", viewDetails: "عرض التفاصيل", loadError: "تعذر تحميل البيانات. يرجى التحديث.", showingOf: "عرض {count} من {total} {noun}",
+    pts: "نقطة", points: "نقاط", cancel: "إلغاء", viewDetails: "عرض التفاصيل", loadError: "تعذر تحميل البيانات. يرجى التحديث.", showingOf: "عرض {count} من {total} {noun}",
   },
   customers: {
     title: "العملاء", subtitle: "إدارة وعرض قاعدة عملائك الفاخرة حول العالم.", activeClients: "إجمالي العملاء النشطين", premiumFocus: "التركيز على الفئات المميزة",
@@ -373,7 +373,7 @@ const he: Dictionary = {
     status: { pending_payment: "ממתין לתשלום", paid: "התשלום אושר", processing: "בטיפול", shipped: "נשלח", delivered: "נמסר", cancelled: "בוטל", in_store: "רכישה בחנות" },
     tiers: { silver: "כסף", gold: "זהב", platinum: "פלטינה", diamond: "יהלום" },
     channels: { app: "אפליקציה", branch: "סניף פיזי" },
-    pts: "נק׳", points: "נקודות", viewDetails: "הצגת פרטים", loadError: "לא ניתן לטעון נתונים. נא לרענן.", showingOf: "מציג {count} מתוך {total} {noun}",
+    pts: "נק׳", points: "נקודות", cancel: "ביטול", viewDetails: "הצגת פרטים", loadError: "לא ניתן לטעון נתונים. נא לרענן.", showingOf: "מציג {count} מתוך {total} {noun}",
   },
   customers: {
     title: "לקוחות", subtitle: "נהלו וצפו בבסיס לקוחות היוקרה הגלובלי שלכם.", activeClients: "סה״כ לקוחות פעילים", premiumFocus: "מיקוד בדרגות פרימיום",

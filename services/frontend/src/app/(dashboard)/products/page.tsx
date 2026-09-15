@@ -97,7 +97,7 @@ export default async function ProductsPage({ searchParams }: PageProps<"/product
                     <td className="px-8 py-6">
                       <div className="flex items-center justify-end gap-6">
                         <ProductDialog {...dialogProps} product={p} />
-                        <DeleteButton action={deleteProduct.bind(null, p.id)} label={t.delete} confirmText={t.confirmDelete} errorText={t.deleteError} />
+                        <DeleteButton action={deleteProduct.bind(null, p.id)} label={t.delete} cancelText={dict.common.cancel} confirmText={t.confirmDelete} errorText={t.deleteError} />
                       </div>
                     </td>
                   </tr>
@@ -137,7 +137,7 @@ export default async function ProductsPage({ searchParams }: PageProps<"/product
               </div>
               <div className="flex items-center gap-6">
                 <BannerDialog t={t} banner={b} />
-                <DeleteButton action={deleteBanner.bind(null, b.id)} label={t.delete} confirmText={t.confirmDeleteBanner} errorText={t.deleteBannerError} />
+                <DeleteButton action={deleteBanner.bind(null, b.id)} label={t.delete} cancelText={dict.common.cancel} confirmText={t.confirmDeleteBanner} errorText={t.deleteBannerError} />
               </div>
             </div>
           </div>
