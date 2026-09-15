@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Your Mad Perfume invoice {{ order.number }}</title></head>
+<body style="margin:0;padding:0;background:#faf7f5;font-family:Inter,Helvetica,Arial,sans-serif;color:#1f2937;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#faf7f5;">
+    <tr><td align="center" style="padding:48px 16px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
+        <tr><td align="center">
+          <img src="{{ logo_url }}" width="72" height="72" alt="Mad Perfume" style="display:block;border-radius:36px;border:0;">
+          <p style="margin:20px 0 0;font-size:22px;letter-spacing:4px;color:#000;">MAD PERFUME</p>
+        </td></tr>
+        <tr><td style="padding-top:28px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:20px;">
+            <tr><td style="padding:36px;">
+              <p style="margin:0;font-size:11px;letter-spacing:2px;color:#6b7280;">INVOICE</p>
+              <p style="margin:6px 0 0;font-size:22px;color:#000;">{{ order.number }}</p>
+              <p style="margin:6px 0 0;font-size:13px;color:#6b7280;">{{ order.created_at|date:"M d, Y" }} · {{ order.get_payment_method_display }}{% if order.card_last4 %} •••• {{ order.card_last4 }}{% endif %}</p>
+              <p style="margin:20px 0 0;font-size:15px;line-height:24px;color:#4b5563;">Hi {{ order.customer.full_name }}, thank you for your order. Estimated delivery: {{ order.estimated_delivery|date:"M d, Y" }}.</p>
+
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:24px;border-top:1px solid #eee;">
+                {% for item in items %}
+                <tr>
+                  <td style="padding:14px 0;border-bottom:1px solid #eee;font-size:14px;color:#111827;">
+                    {{ item.product_name }}{% if item.variant %}<br><span style="font-size:12px;color:#6b7280;">{{ item.variant }}</span>{% endif %}
+                    <br><span style="font-size:12px;color:#6b7280;">{{ item.quantity }} × ${{ item.unit_price }}</span>
+                  </td>
+                  <td align="right" style="padding:14px 0;border-bottom:1px solid #eee;font-size:14px;color:#111827;">${{ item.line_total }}</td>
+                </tr>
+                {% endfor %}
+              </table>
+
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:16px;font-size:14px;color:#4b5563;">
+                <tr><td style="padding:4px 0;">Subtotal</td><td align="right">${{ order.subtotal }}</td></tr>
+                <tr><td style="padding:4px 0;">Shipping</td><td align="right">{% if order.shipping_fee %}${{ order.shipping_fee }}{% else %}Free{% endif %}</td></tr>
+                <tr><td style="padding:4px 0;">Tax</td><td align="right">${{ order.tax }}</td></tr>
+                <tr><td style="padding:12px 0 0;font-size:16px;color:#000;font-weight:600;">Total</td><td align="right" style="padding:12px 0 0;font-size:16px;color:#000;font-weight:600;">${{ order.total }}</td></tr>
+              </table>
+
+              <p style="margin:28px 0 0;font-size:11px;letter-spacing:2px;color:#6b7280;">SHIPPING TO</p>
+              <p style="margin:6px 0 0;font-size:14px;line-height:22px;color:#111827;">{{ order.shipping_name }}<br>{{ order.shipping_address }}<br>{{ order.shipping_city }}{% if order.shipping_phone %}<br>{{ order.shipping_phone }}{% endif %}</p>
+            </td></tr>
+          </table>
+        </td></tr>
+        <tr><td align="center" style="padding-top:28px;font-size:10px;letter-spacing:1.2px;color:#9ca3af;">© {% now "Y" %} MAD PERFUME. INVISIBLE ELEGANCE.</td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>

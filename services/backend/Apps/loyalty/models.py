@@ -40,16 +40,24 @@ class LoyaltyTransaction(models.Model):
         EARNED = "earned", "Earned"
         REDEEMED = "redeemed", "Redeemed"
 
+    class Reason(models.TextChoices):
+        PURCHASE = "purchase", "Purchase"
+        REVIEW = "review", "Product Review"
+        REWARD = "reward", "Reward Redemption"
+
     customer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="loyalty_transactions")
     kind = models.CharField(max_length=10, choices=Kind.choices)
+    reason = models.CharField(max_length=10, choices=Reason.choices, default=Reason.PURCHASE)
     channel = models.CharField(max_length=10, choices=[("app", "Mobile App"), ("branch", "Physical Branch")])
     branch = models.ForeignKey("branches.Branch", on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
     order = models.ForeignKey("orders.Order", on_delete=models.SET_NULL, null=True, blank=True, related_name="loyalty_transactions")
     reward = models.ForeignKey(Reward, on_delete=models.SET_NULL, null=True, blank=True, related_name="redemptions")
+    review = models.OneToOneField("catalog.Review", on_delete=models.SET_NULL, null=True, blank=True, related_name="loyalty_transaction")
     purchase_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     points = models.IntegerField(help_text="Positive when earned, negative when redeemed.")
     balance_after = models.IntegerField()
     note = models.TextField(blank=True)
+    fulfilled_at = models.DateTimeField(null=True, blank=True, help_text="When a redeemed reward was handed over.")
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
 
@@ -65,4 +73,4 @@ class LoyaltyTransaction(models.Model):
         """Order / invoice number shown in transaction tables."""
         if self.order_id:
             return f"MAD-{self.order_id:05d}"
-        return f"RD-{self.pk:05d}"
+        return f"{'RV' if self.reason == self.Reason.REVIEW else 'RD'}-{self.pk:05d}"

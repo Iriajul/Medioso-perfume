@@ -11,6 +11,10 @@ export type Branch = {
   id: number;
   name: string;
   address: string;
+  city: string;
+  country: string;
+  email: string;
+  is_flagship: boolean;
   phone: string;
   weekday_opens: string;
   weekday_closes: string;

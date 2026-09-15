@@ -29,3 +29,25 @@ class Notification(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class UserNotification(models.Model):
+    """One customer's inbox entry: broadcast offers, loyalty events and order updates."""
+
+    class Category(models.TextChoices):
+        OFFERS = "offers", "Offers & Curations"
+        REWARDS = "rewards", "Loyalty & Rewards"
+        ORDERS = "orders", "Order Status"
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="notifications")
+    category = models.CharField(max_length=10, choices=Category.choices)
+    title = models.CharField(max_length=150)
+    body = models.TextField()
+    broadcast = models.ForeignKey(Notification, on_delete=models.CASCADE, null=True, blank=True, related_name="deliveries")
+    order = models.ForeignKey("orders.Order", on_delete=models.CASCADE, null=True, blank=True, related_name="+")
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        indexes = [models.Index(fields=["user", "-created_at"])]

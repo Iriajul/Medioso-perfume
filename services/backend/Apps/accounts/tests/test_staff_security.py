@@ -71,7 +71,7 @@ class NotificationTests(Base):
         for audience in ["all", "gold", "platinum", "diamond"]:
             counts[audience] = self.client.post(url, {"title": "Launch", "body": "Midnight Jasmine", "audience": audience}).json()["recipients_count"]
         self.assertEqual(counts, {"all": 4, "gold": 1, "platinum": 1, "diamond": 1})
-        self.assertEqual(Notification.objects.filter(created_by=self.admin, status="queued").count(), 4)
+        self.assertEqual(Notification.objects.filter(created_by=self.admin, status="sent").count(), 4)
 
 
 class SecurityTests(Base):
