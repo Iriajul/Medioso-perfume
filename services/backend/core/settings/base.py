@@ -171,10 +171,13 @@ REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_CLASSES": [
         "rest_framework.throttling.AnonRateThrottle",
         "rest_framework.throttling.UserRateThrottle",
+        "rest_framework.throttling.ScopedRateThrottle",
     ],
     "DEFAULT_THROTTLE_RATES": {
         "anon": env("THROTTLE_ANON", default="60/min"),
         "user": env("THROTTLE_USER", default="1000/hour"),
+        # Brute-force guard on login (ScopedRateThrottle via throttle_scope).
+        "auth": env("THROTTLE_AUTH", default="10/min"),
     },
 }
 

@@ -23,7 +23,7 @@ SECRET_KEY = "test-secret-key-not-for-production"
 
 REST_FRAMEWORK = {
     **REST_FRAMEWORK,
-    "DEFAULT_THROTTLE_RATES": {"anon": None, "user": None},
+    "DEFAULT_THROTTLE_RATES": {"anon": None, "user": None, "auth": None},
 }
 
 EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
