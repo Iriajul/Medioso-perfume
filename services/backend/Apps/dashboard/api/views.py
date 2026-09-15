@@ -7,6 +7,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from Apps.accounts.models import User
+from Apps.catalog.models import Product
 
 
 def trend_percent(current, previous):
@@ -15,7 +16,7 @@ def trend_percent(current, previous):
 
 
 class DashboardView(APIView):
-    """Admin dashboard overview. Order, product and loyalty figures are filled in
+    """Admin dashboard overview. Order and loyalty figures are filled in
     as those apps land; until then they are zero / empty."""
 
     permission_classes = [IsAdminUser]
@@ -31,7 +32,7 @@ class DashboardView(APIView):
             {
                 "total_customers": customers["total"],
                 "customers_trend": trend_percent(customers["current"], customers["previous"]),
-                "total_products": 0,
+                "total_products": Product.objects.count(),
                 "total_orders": 0,
                 "orders_trend": None,
                 "points_issued": 0,

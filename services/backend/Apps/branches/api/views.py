@@ -1,8 +1,10 @@
 from django.utils import timezone
 from rest_framework import serializers
+from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.permissions import IsAdminUser
+from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 from Apps.branches.models import Branch
@@ -53,6 +55,11 @@ class BranchViewSet(ModelViewSet):
     permission_classes = [IsAdminUser]
     pagination_class = BranchPagination
     parser_classes = [MultiPartParser, FormParser, JSONParser]
+
+    @action(detail=False, pagination_class=None)
+    def options(self, request):
+        """All branches as {id, name, address} for checkbox lists."""
+        return Response(list(Branch.objects.values("id", "name", "address")))
 
     def list(self, request, *args, **kwargs):
         response = super().list(request, *args, **kwargs)

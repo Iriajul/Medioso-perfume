@@ -1,7 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { startTransition, useActionState, useRef, useState } from "react";
+import { useState } from "react";
+import { useFormDialog } from "@/components/use-form-dialog";
 import { ArrowRight, FileUp, Plus, Shapes, SquarePen, X } from "lucide-react";
 import type { Dictionary } from "@/i18n/dictionaries";
 import type { SaveState } from "@/lib/session";
@@ -11,33 +12,22 @@ import type { Category } from "./page";
 const field = "w-full rounded-xl border border-gray-300 px-4 py-3 text-base text-gray-900 placeholder:text-gray-300 outline-none focus:border-brand-light";
 
 export default function CategoryDialog({ t, category }: { t: Dictionary["categories"]; category?: Category }) {
-  const dialog = useRef<HTMLDialogElement>(null);
-  const form = useRef<HTMLFormElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
-
-  const close = () => {
-    dialog.current?.close();
-    form.current?.reset();
-    setPreview(null);
-  };
-
-  // Close after a successful save; the page re-renders with fresh data.
-  const [state, action, pending] = useActionState(async (prev: SaveState, formData: FormData) => {
-    const result = await saveCategory(category?.id ?? null, prev, formData);
-    if (result?.ok) close();
-    return result;
-  }, undefined);
+  const { dialogRef, formRef, open, close, state, pending, onSubmit } = useFormDialog(
+    (prev: SaveState, formData: FormData) => saveCategory(category?.id ?? null, prev, formData),
+    () => setPreview(null),
+  );
 
   return (
     <>
       {category ? (
-        <button type="button" onClick={() => dialog.current?.showModal()} aria-label={t.edit} className="text-gray-600 hover:text-brand">
+        <button type="button" onClick={open} aria-label={t.edit} className="text-gray-600 hover:text-brand">
           <SquarePen className="size-4" />
         </button>
       ) : (
         <button
           type="button"
-          onClick={() => dialog.current?.showModal()}
+          onClick={open}
           className="flex items-center gap-2 rounded-xl bg-brand px-7 py-4 text-base uppercase tracking-[0.08em] text-white shadow-[0_8px_20px_rgba(0,50,125,0.3)]"
         >
           <Plus className="size-5" /> {t.add}
@@ -45,7 +35,7 @@ export default function CategoryDialog({ t, category }: { t: Dictionary["categor
       )}
 
       <dialog
-        ref={dialog}
+        ref={dialogRef}
         onClose={close}
         className="m-auto w-full max-w-[640px] rounded-[36px] bg-white p-0 text-start shadow-2xl backdrop:bg-gray-900/30 backdrop:backdrop-blur-sm"
       >
@@ -58,11 +48,7 @@ export default function CategoryDialog({ t, category }: { t: Dictionary["categor
           <button type="button" onClick={close} aria-label="Close" className="text-gray-600"><X className="size-6" /></button>
         </div>
 
-        <form
-          ref={form}
-          // onSubmit (not action=) so a failed save keeps what the admin typed.
-          onSubmit={(e) => { e.preventDefault(); const data = new FormData(e.currentTarget); startTransition(() => action(data)); }}
-          className="space-y-6 px-8 py-8">
+        <form ref={formRef} onSubmit={onSubmit} className="space-y-6 px-8 py-8">
           <div>
             <p className="text-base text-gray-700">{t.imageLabel}</p>
             <label className="relative mt-3 flex h-44 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-gray-300 text-center">

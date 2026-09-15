@@ -1,7 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { startTransition, useActionState, useRef, useState } from "react";
+import { useState } from "react";
+import { useFormDialog } from "@/components/use-form-dialog";
 import { ArrowRight, CloudUpload, Pencil, Phone, Plus, X } from "lucide-react";
 import type { Dictionary } from "@/i18n/dictionaries";
 import type { SaveState } from "@/lib/session";
@@ -12,21 +13,11 @@ const field = "w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-
 const label = "text-xs font-medium uppercase tracking-wide text-gray-700";
 
 export default function BranchDialog({ t, branch }: { t: Dictionary["branches"]; branch?: Branch }) {
-  const dialog = useRef<HTMLDialogElement>(null);
-  const form = useRef<HTMLFormElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
-
-  const close = () => {
-    dialog.current?.close();
-    form.current?.reset();
-    setPreview(null);
-  };
-
-  const [state, action, pending] = useActionState(async (prev: SaveState, formData: FormData) => {
-    const result = await saveBranch(branch?.id ?? null, prev, formData);
-    if (result?.ok) close();
-    return result;
-  }, undefined);
+  const { dialogRef, formRef, open, close, state, pending, onSubmit } = useFormDialog(
+    (prev: SaveState, formData: FormData) => saveBranch(branch?.id ?? null, prev, formData),
+    () => setPreview(null),
+  );
 
   const time = (name: keyof Branch, fallback: string) => (
     <input type="time" name={name} required defaultValue={(branch?.[name] as string | undefined)?.slice(0, 5) ?? fallback} className={field} />
@@ -35,13 +26,13 @@ export default function BranchDialog({ t, branch }: { t: Dictionary["branches"];
   return (
     <>
       {branch ? (
-        <button type="button" onClick={() => dialog.current?.showModal()} aria-label={t.edit} className="text-gray-600 hover:text-brand">
+        <button type="button" onClick={open} aria-label={t.edit} className="text-gray-600 hover:text-brand">
           <Pencil className="size-4" />
         </button>
       ) : (
         <button
           type="button"
-          onClick={() => dialog.current?.showModal()}
+          onClick={open}
           className="flex items-center gap-8 rounded-2xl bg-brand-light px-8 py-4 text-base font-semibold uppercase tracking-[0.1em] text-white shadow-[0_8px_20px_rgba(0,68,165,0.3)]"
         >
           <Plus className="size-5" /> <span className="max-w-32 text-center leading-6">{t.add}</span>
@@ -49,7 +40,7 @@ export default function BranchDialog({ t, branch }: { t: Dictionary["branches"];
       )}
 
       <dialog
-        ref={dialog}
+        ref={dialogRef}
         onClose={close}
         className="m-auto max-h-[92vh] w-full max-w-[672px] rounded-3xl bg-[#f1f1f1] p-0 text-start shadow-2xl backdrop:bg-gray-900/30 backdrop:backdrop-blur-sm"
       >
@@ -61,11 +52,7 @@ export default function BranchDialog({ t, branch }: { t: Dictionary["branches"];
           <button type="button" onClick={close} aria-label="Close" className="text-gray-700"><X className="size-6" /></button>
         </div>
 
-        <form
-          ref={form}
-          // onSubmit (not action=) so a failed save keeps what the admin typed.
-          onSubmit={(e) => { e.preventDefault(); const data = new FormData(e.currentTarget); startTransition(() => action(data)); }}
-          className="space-y-7 px-8 py-8">
+        <form ref={formRef} onSubmit={onSubmit} className="space-y-7 px-8 py-8">
           <div>
             <p className={label}>{t.imageLabel}</p>
             <label className="relative mt-3 flex h-64 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-[#d9c7b0] text-center">

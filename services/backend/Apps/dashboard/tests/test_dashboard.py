@@ -25,8 +25,8 @@ class DashboardTests(TestCase):
         return self.client.get(self.url, **headers)
 
     def test_admin_overview(self):
-        # auth user lookup + one aggregate query
-        with self.assertNumQueries(2):
+        # auth user lookup + customers aggregate + product count
+        with self.assertNumQueries(3):
             response = self.get(self.admin)
 
         self.assertEqual(response.status_code, 200)
