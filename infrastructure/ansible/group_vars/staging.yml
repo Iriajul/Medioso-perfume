@@ -3,4 +3,6 @@ env: staging
 website_domain: "bpmstudio.pt"
 api_host: "staging-api.{{ website_domain }}"
 admin_host: "staging-admin.{{ website_domain }}"
-certbot_email: "admin@bpmstudio.pt"   # TODO: set a real, monitored inbox for Let's Encrypt notices
+# Staging deploys the mutable :staging image tag unless IMAGE_TAG is set.
+image_tag: "{{ lookup('env', 'IMAGE_TAG') | default('staging', true) }}"
+certbot_email: "syedriajul420islam@gmail.com"

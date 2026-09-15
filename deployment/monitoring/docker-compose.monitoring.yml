@@ -2,7 +2,7 @@
 # ─── Mad Perfume Monitoring Stack ──────────────────────────────────────────
 # Runs alongside the app on the same EC2 box. UIs bind to 127.0.0.1 only —
 # reach Grafana via SSH tunnel:
-#   ssh -L 3100:localhost:3100 ubuntu@13.48.88.3   # then open http://localhost:3100
+#   ssh -L 3100:localhost:3100 ubuntu@<server-ip>   # then open http://localhost:3100
 # Usage: docker compose -f docker-compose.monitoring.yml up -d
 
 services:

@@ -3,7 +3,7 @@ env: production
 website_domain: "bpmstudio.pt"
 api_host: "api.{{ website_domain }}"
 admin_host: "admin.{{ website_domain }}"
-certbot_email: "admin@bpmstudio.pt"   # TODO: set a real, monitored inbox for Let's Encrypt notices
+certbot_email: "syedriajul420islam@gmail.com"
 
 # Grafana admin password is stored in AWS Secrets Manager and fetched at
 # deploy time by the monitoring role. See infrastructure/terraform/shared/secrets.tf

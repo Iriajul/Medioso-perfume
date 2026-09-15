@@ -40,6 +40,11 @@
     groups: docker
     append: yes
 
+# Reconnect so later tasks running as ubuntu pick up the new docker group
+# (the persistent SSH connection otherwise keeps the old group list).
+- name: Reset SSH connection to apply docker group membership
+  meta: reset_connection
+
 - name: Ensure Docker service is enabled and started
   service:
     name: docker
