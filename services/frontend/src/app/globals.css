@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme inline {
-  --font-sans: var(--font-inter);
+  --font-sans: var(--font-inter), var(--font-arabic), var(--font-hebrew), sans-serif;
   --color-canvas: #f8f8ff;
   --color-brand: #00327d;
   --color-brand-light: #0044a5;

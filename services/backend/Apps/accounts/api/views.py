@@ -19,6 +19,14 @@ from Apps.accounts.models import User
 
 
 class AdminLoginSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user):
+        # Display claims so the dashboard header needs no extra API call.
+        token = super().get_token(user)
+        token["full_name"] = user.full_name
+        token["email"] = user.email
+        return token
+
     def validate(self, attrs):
         data = super().validate(attrs)
         if not self.user.is_staff:

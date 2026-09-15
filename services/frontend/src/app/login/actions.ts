@@ -26,6 +26,9 @@ export async function login(_: LoginState, formData: FormData): Promise<LoginSta
   cookieStore.set("access", access, { ...base, maxAge: 60 * 60 });
   // Without "remember", the refresh cookie ends with the browser session.
   cookieStore.set("refresh", refresh, remember ? { ...base, maxAge: 60 * 60 * 24 * 30 } : base);
+  // Lets the proxy keep the 30-day lifetime when it rotates the refresh token.
+  if (remember) cookieStore.set("remember", "1", { ...base, maxAge: 60 * 60 * 24 * 30 });
+  else cookieStore.delete("remember");
 
   redirect("/");
 }
