@@ -1,24 +1,44 @@
-from django.conf import settings
 from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth.tokens import default_token_generator
 from django.core.exceptions import ValidationError as DjangoValidationError
-from django.core.mail import send_mail
-from django.template.loader import render_to_string
-from django.utils.encoding import force_bytes
-from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
+from django.utils.http import urlsafe_base64_decode
 from rest_framework import serializers, status
 from rest_framework.exceptions import AuthenticationFailed
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 
+from Apps.accounts.emails import send_password_link
 from Apps.accounts.models import User
 
 
+def check_password_rules(password, user):
+    try:
+        validate_password(password, user)
+    except DjangoValidationError as e:
+        raise serializers.ValidationError({"password": list(e.messages)})
+
+
+def revoke_sessions(user):
+    """Blacklists every refresh token issued to the user (signs them out everywhere)."""
+    BlacklistedToken.objects.bulk_create(
+        [BlacklistedToken(token=t) for t in OutstandingToken.objects.filter(user=user).only("id")],
+        ignore_conflicts=True,
+    )
+
+
 class AdminLoginSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user):
+        # Display claims so the dashboard header needs no extra API call.
+        token = super().get_token(user)
+        token["full_name"] = user.full_name
+        token["email"] = user.email
+        return token
+
     def validate(self, attrs):
         data = super().validate(attrs)
         if not self.user.is_staff:
@@ -51,18 +71,7 @@ class PasswordResetRequestView(APIView):
             email__iexact=serializer.validated_data["email"], is_staff=True, is_active=True
         ).first()
         if user:
-            uid = urlsafe_base64_encode(force_bytes(user.pk))
-            token = default_token_generator.make_token(user)
-            link = f"{settings.ADMIN_URL}/reset-password?uid={uid}&token={token}"
-            context = {"name": user.full_name, "link": link, "logo_url": f"{settings.ADMIN_URL}/logo.png"}
-            send_mail(
-                "Reset your Mad Perfume admin password",
-                f"Use this link to set a new password:\n\n{link}\n\n"
-                "The link expires in 1 hour. If you didn't request this, you can ignore this email.",
-                None,
-                [user.email],
-                html_message=render_to_string("accounts/emails/password_reset.html", context),
-            )
+            send_password_link(user)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -78,10 +87,7 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
             user = None
         if user is None or not default_token_generator.check_token(user, attrs["token"]):
             raise serializers.ValidationError({"token": "This reset link is invalid or has expired."})
-        try:
-            validate_password(attrs["password"], user)
-        except DjangoValidationError as e:
-            raise serializers.ValidationError({"password": list(e.messages)})
+        check_password_rules(attrs["password"], user)
         attrs["user"] = user
         return attrs
 
@@ -98,9 +104,45 @@ class PasswordResetConfirmView(APIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data["user"]
         user.set_password(serializer.validated_data["password"])
-        user.save(update_fields=["password"])
-        BlacklistedToken.objects.bulk_create(
-            [BlacklistedToken(token=t) for t in OutstandingToken.objects.filter(user=user).only("id")],
-            ignore_conflicts=True,
-        )
+        user.save(update_fields=["password", "password_changed_at"])
+        revoke_sessions(user)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class ChangePasswordSerializer(serializers.Serializer):
+    current_password = serializers.CharField(write_only=True)
+    password = serializers.CharField(write_only=True)
+
+    def validate(self, attrs):
+        user = self.context["request"].user
+        if not user.check_password(attrs["current_password"]):
+            raise serializers.ValidationError({"current_password": "Current password is incorrect."})
+        if attrs["current_password"] == attrs["password"]:
+            raise serializers.ValidationError({"password": "New password must be different from the current one."})
+        check_password_rules(attrs["password"], user)
+        return attrs
+
+
+class MeView(APIView):
+    """Signed-in admin's account info."""
+
+    permission_classes = [IsAdminUser]
+
+    def get(self, request):
+        u = request.user
+        return Response({"id": u.id, "full_name": u.full_name, "email": u.email, "password_changed_at": u.password_changed_at})
+
+
+class ChangePasswordView(APIView):
+    """Security Settings: change password, then sign out all sessions."""
+
+    permission_classes = [IsAdminUser]
+    throttle_scope = "auth"
+
+    def post(self, request):
+        serializer = ChangePasswordSerializer(data=request.data, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        request.user.set_password(serializer.validated_data["password"])
+        request.user.save(update_fields=["password", "password_changed_at"])
+        revoke_sessions(request.user)
         return Response(status=status.HTTP_204_NO_CONTENT)

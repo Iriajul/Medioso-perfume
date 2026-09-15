@@ -1,6 +1,8 @@
 from django.test import TestCase
 from django.urls import reverse
 
+from rest_framework_simplejwt.tokens import AccessToken
+
 from Apps.accounts.models import User
 
 
@@ -22,6 +24,8 @@ class AdminLoginTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(set(response.json()), {"access", "refresh"})
+        claims = AccessToken(response.json()["access"])
+        self.assertEqual((claims["full_name"], claims["email"]), ("Admin", "admin@madperfume.com"))
 
     def test_wrong_password_rejected(self):
         self.assertEqual(self.login("admin@madperfume.com", "wrong").status_code, 401)
