@@ -33,6 +33,9 @@ class PasswordResetTests(TestCase):
         self.assertEqual(response.status_code, 204)
         self.assertEqual(mail.outbox[0].to, ["admin@madperfume.com"])
         self.assertIn("/reset-password?uid=", mail.outbox[0].body)
+        html, mimetype = mail.outbox[0].alternatives[0]
+        self.assertEqual(mimetype, "text/html")
+        self.assertIn('href="http://localhost:3000/reset-password?uid=', html)
 
     def test_unknown_or_non_staff_email_sends_nothing(self):
         for email in ["nobody@madperfume.com", "customer@madperfume.com"]:
