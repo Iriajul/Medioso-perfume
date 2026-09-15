@@ -3,6 +3,7 @@ from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth.tokens import default_token_generator
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.mail import send_mail
+from django.template.loader import render_to_string
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from rest_framework import serializers, status
@@ -53,12 +54,14 @@ class PasswordResetRequestView(APIView):
             uid = urlsafe_base64_encode(force_bytes(user.pk))
             token = default_token_generator.make_token(user)
             link = f"{settings.ADMIN_URL}/reset-password?uid={uid}&token={token}"
+            context = {"name": user.full_name, "link": link, "logo_url": f"{settings.ADMIN_URL}/logo.png"}
             send_mail(
                 "Reset your Mad Perfume admin password",
                 f"Use this link to set a new password:\n\n{link}\n\n"
                 "The link expires in 1 hour. If you didn't request this, you can ignore this email.",
                 None,
                 [user.email],
+                html_message=render_to_string("accounts/emails/password_reset.html", context),
             )
         return Response(status=status.HTTP_204_NO_CONTENT)
 
