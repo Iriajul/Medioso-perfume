@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { Gift, Package, ShoppingBag, Star, TrendingUp, UserPlus, Users } from "lucide-react";
+import { Gift, Package, ShoppingBag, ShoppingBasket, Star, Store, TrendingUp, Users } from "lucide-react";
 import Avatar from "@/components/avatar";
+import StatusBadge from "@/components/status-badge";
 import { getDictionary, getLang } from "@/i18n/server";
 import { apiGet, getUser } from "@/lib/session";
 import Greeting from "./greeting";
@@ -13,13 +14,7 @@ type Dashboard = {
   orders_trend: number | null;
   points_issued: number;
   recent_orders: { id: number; number: string; customer_name: string; status: string; total: string }[];
-  loyalty_activity: { id: number; customer_name: string; reason: string; points: number }[];
-};
-
-const STATUS_STYLES: Record<string, string> = {
-  shipped: "bg-green-100 text-green-700",
-  processing: "bg-blue-100 text-brand",
-  pending: "bg-orange-100 text-orange-700",
+  loyalty_activity: { id: number; customer_name: string; kind: "earned" | "redeemed"; channel: "app" | "branch"; reward_name: string | null; points: number }[];
 };
 
 export default async function DashboardPage() {
@@ -73,12 +68,12 @@ export default async function DashboardPage() {
             <tbody>
               {data?.recent_orders.map((o) => (
                 <tr key={o.id} className="border-b border-gray-100">
-                  <td className="px-6 py-5 text-gray-900">#{o.number}</td>
+                  <td className="px-6 py-5 text-gray-900"><Link href={`/orders/${o.id}`} className="hover:text-brand">#{o.number}</Link></td>
                   <td className="px-6 py-5">
                     <span className="flex items-center gap-3 text-gray-900"><Avatar name={o.customer_name} className="size-8 text-xs" />{o.customer_name}</span>
                   </td>
                   <td className="px-6 py-5">
-                    <span className={`rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wider ${STATUS_STYLES[o.status] ?? "bg-gray-100 text-gray-600"}`}>{o.status}</span>
+                    <StatusBadge status={o.status} label={t.common.status[o.status as keyof typeof t.common.status]} className="uppercase" />
                   </td>
                   <td className="px-6 py-5 text-end font-semibold text-gray-900">{money.format(Number(o.total))}</td>
                 </tr>
@@ -94,11 +89,11 @@ export default async function DashboardPage() {
             {data?.loyalty_activity.map((a) => (
               <li key={a.id} className="flex items-center gap-3">
                 <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-700">
-                  {a.points < 0 ? <Gift className="size-4" /> : <UserPlus className="size-4" />}
+                  {a.kind === "redeemed" ? <Gift className="size-4" /> : a.channel === "app" ? <ShoppingBasket className="size-4" /> : <Store className="size-4" />}
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold text-gray-900">{a.customer_name}</p>
-                  <p className="text-xs text-gray-500">{a.reason}</p>
+                  <p className="text-xs text-gray-500">{a.kind === "redeemed" ? d.redeemed.replace("{reward}", a.reward_name ?? "") : a.channel === "app" ? d.purchaseReward : d.inStoreReward}</p>
                 </div>
                 <span className={`rounded-lg px-2 py-1 font-semibold ${a.points < 0 ? "bg-red-50 text-red-700" : "bg-gray-100 text-brand"}`} dir="ltr">
                   {a.points > 0 ? "+" : ""}{num.format(a.points)} {d.pts}

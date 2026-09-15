@@ -1,8 +1,7 @@
 """Identity models.
 
-The custom User is defined up-front because swapping AUTH_USER_MODEL after the
-first migration is painful. Customer profile, roles (customer / branch staff),
-addresses and loyalty fields are added with their features.
+One User model for admins/staff (is_staff) and customers. Customer profile and
+loyalty balance live on the same row so lists need no joins.
 """
 
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
@@ -16,6 +15,13 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     email = models.EmailField(unique=True)
     full_name = models.CharField(max_length=255)
+    phone = models.CharField(max_length=30, blank=True)
+    avatar_url = models.URLField(max_length=500, blank=True)
+    shipping_address = models.TextField(blank=True)
+
+    # Loyalty, kept in sync by Apps.loyalty.services (never edited directly).
+    points_balance = models.IntegerField(default=0)
+    lifetime_points = models.PositiveIntegerField(default=0)
 
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)

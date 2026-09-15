@@ -59,6 +59,8 @@ LOCAL_APPS = [
     "Apps.dashboard",
     "Apps.catalog",
     "Apps.branches",
+    "Apps.orders",
+    "Apps.loyalty",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -251,6 +253,9 @@ cloudinary.config(
     secure=True,
 )
 CLOUDINARY_FOLDER = env("CLOUDINARY_FOLDER", default="madperfume")
+
+# Loyalty: points earned per $1 spent.
+POINTS_PER_DOLLAR = env.int("POINTS_PER_DOLLAR", default=1)
 
 # Admin dashboard base URL, used in password reset links.
 ADMIN_URL = env("ADMIN_URL", default="http://localhost:3000")

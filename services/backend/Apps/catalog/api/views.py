@@ -10,6 +10,8 @@ from rest_framework.viewsets import ModelViewSet
 from Apps.branches.models import Branch
 from Apps.catalog.models import Banner, Category, Product
 from Apps.common.media import delete_image, upload_image, validate_image
+from Apps.common.stats import money
+from Apps.orders.models import Order
 
 IMAGE_SLOTS = ["image_1", "image_2", "image_3"]
 
@@ -55,7 +57,7 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class CategoryViewSet(AdminModelViewSet):
-    queryset = Category.objects.annotate(products_count=Count("products"))
+    queryset = Category.objects.annotate(products_count=Count("products")).order_by("name")
     serializer_class = CategorySerializer
     pagination_class = page_size(5)
 
@@ -132,9 +134,9 @@ class ProductViewSet(AdminModelViewSet):
 
     def list(self, request, *args, **kwargs):
         response = super().list(request, *args, **kwargs)
-        # Revenue is filled in from orders once the orders app lands.
         response.data["in_stock"] = Product.objects.aggregate(total=Sum("stock"))["total"] or 0
-        response.data["revenue"] = "0.00"
+        revenue = Order.objects.exclude(status=Order.Status.CANCELLED).aggregate(total=Sum("total"))["total"]
+        response.data["revenue"] = money(revenue)
         return response
 
     def perform_destroy(self, instance):

@@ -1,42 +1,40 @@
-from datetime import timedelta
-
-from django.db.models import Count, Q
-from django.utils import timezone
+from django.db.models import Sum
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from Apps.accounts.models import User
 from Apps.catalog.models import Product
-
-
-def trend_percent(current, previous):
-    """Change of the last 30 days vs the 30 days before, or None without a baseline."""
-    return round((current - previous) / previous * 100) if previous else None
+from Apps.common.stats import count_trend
+from Apps.loyalty.models import LoyaltyTransaction
+from Apps.orders.models import Order
 
 
 class DashboardView(APIView):
-    """Admin dashboard overview. Order and loyalty figures are filled in
-    as those apps land; until then they are zero / empty."""
+    """Admin dashboard overview."""
 
     permission_classes = [IsAdminUser]
 
     def get(self, request):
-        now = timezone.now()
-        customers = User.objects.filter(is_staff=False).aggregate(
-            total=Count("id"),
-            current=Count("id", filter=Q(created_at__gte=now - timedelta(days=30))),
-            previous=Count("id", filter=Q(created_at__gte=now - timedelta(days=60), created_at__lt=now - timedelta(days=30))),
-        )
-        return Response(
-            {
-                "total_customers": customers["total"],
-                "customers_trend": trend_percent(customers["current"], customers["previous"]),
-                "total_products": Product.objects.count(),
-                "total_orders": 0,
-                "orders_trend": None,
-                "points_issued": 0,
-                "recent_orders": [],
-                "loyalty_activity": [],
-            }
-        )
+        total_customers, customers_trend = count_trend(User.objects.filter(is_staff=False))
+        total_orders, orders_trend = count_trend(Order.objects.all())
+        recent_orders = Order.objects.select_related("customer")[:4]
+        activity = LoyaltyTransaction.objects.select_related("customer", "reward")[:5]
+
+        return Response({
+            "total_customers": total_customers,
+            "customers_trend": customers_trend,
+            "total_products": Product.objects.count(),
+            "total_orders": total_orders,
+            "orders_trend": orders_trend,
+            "points_issued": LoyaltyTransaction.objects.filter(kind="earned").aggregate(total=Sum("points"))["total"] or 0,
+            "recent_orders": [
+                {"id": o.id, "number": o.number, "customer_name": o.customer.full_name, "status": o.status, "total": str(o.total)}
+                for o in recent_orders
+            ],
+            "loyalty_activity": [
+                {"id": t.id, "customer_name": t.customer.full_name, "kind": t.kind, "channel": t.channel,
+                 "reward_name": t.reward.name if t.reward else None, "points": t.points}
+                for t in activity
+            ],
+        })

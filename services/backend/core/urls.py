@@ -15,6 +15,8 @@ api_v1_patterns = [
     path("", include("Apps.dashboard.api.urls")),
     path("", include("Apps.catalog.api.urls")),
     path("", include("Apps.branches.api.urls")),
+    path("", include("Apps.orders.api.urls")),
+    path("", include("Apps.loyalty.api.urls")),
 ]
 
 urlpatterns = [

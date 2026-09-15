@@ -19,7 +19,11 @@ export async function getUser() {
 
 export async function apiFetch(path: string, init: RequestInit = {}) {
   const access = (await cookies()).get("access")?.value;
-  return fetch(`${API_URL}${path}`, { ...init, headers: { Authorization: `Bearer ${access}` }, cache: "no-store" }).catch(() => null);
+  return fetch(`${API_URL}${path}`, { ...init, headers: { ...init.headers, Authorization: `Bearer ${access}` }, cache: "no-store" }).catch(() => null);
+}
+
+export function apiJson(path: string, body: unknown, method = "POST") {
+  return apiFetch(path, { method, body: JSON.stringify(body), headers: { "Content-Type": "application/json" } });
 }
 
 export async function apiGet<T>(path: string): Promise<T | null> {

@@ -38,8 +38,8 @@ class ProductApiTests(APITestCase):
         return reverse("v1:catalog:product-detail", args=[product.pk])
 
     def test_list_no_n_plus_one(self, upload, destroy):
-        # auth + count + page (with category join) + branches prefetch + stock sum
-        with self.assertNumQueries(5):
+        # auth + count + page (with category join) + branches prefetch + stock sum + revenue sum
+        with self.assertNumQueries(6):
             response = self.client.get(self.list_url)
 
         data = response.json()
