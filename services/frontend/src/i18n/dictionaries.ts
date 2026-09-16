@@ -131,6 +131,9 @@ const en = {
     points: "Points", date: "Redeemed", status: "Status", processing: "In Processing", collected: "Collected",
     collectedBy: "by {name} · {branch}", markCollected: "Mark Collected", marking: "Saving…", collectError: "Unable to update this voucher.",
     off: "off", unused: "Not used yet", used: "Used", usedOn: "on {order}",
+    searchPlaceholder: "Search code, customer or reward…", noMatches: "No redemptions match your search.", inBoutique: "Collected in boutique",
+    showing: "Showing {from}-{to} of {total} redemptions",
+    filters: { all: "All", processing: "Awaiting", used: "Used", collected: "Collected" },
     discountAmount: "Voucher Value", discountHint: "Money off a purchase when used at checkout. Leave 0 if the reward is collected in a boutique.",
   },
   staff: {
@@ -293,6 +296,9 @@ const ar: Dictionary = {
     points: "النقاط", date: "تاريخ الاستبدال", status: "الحالة", processing: "قيد المعالجة", collected: "تم الاستلام",
     collectedBy: "بواسطة {name} · {branch}", markCollected: "تعليم كمُستلمة", marking: "جارٍ الحفظ…", collectError: "تعذر تحديث هذه القسيمة.",
     off: "خصم", unused: "لم تُستخدم بعد", used: "مستخدمة", usedOn: "على {order}",
+    searchPlaceholder: "ابحث برمز القسيمة أو العميل أو المكافأة…", noMatches: "لا توجد نتائج مطابقة لبحثك.", inBoutique: "تُستلم من المتجر",
+    showing: "عرض {from}-{to} من {total} استبدال",
+    filters: { all: "الكل", processing: "بالانتظار", used: "مستخدمة", collected: "مستلمة" },
     discountAmount: "قيمة القسيمة", discountHint: "قيمة الخصم عند الاستخدام في الدفع. اتركها 0 إذا كانت المكافأة تُستلم من المتجر.",
   },
   staff: {
@@ -453,6 +459,9 @@ const he: Dictionary = {
     points: "נקודות", date: "תאריך מימוש", status: "סטטוס", processing: "בעיבוד", collected: "נאסף",
     collectedBy: "על ידי {name} · {branch}", markCollected: "סימון כנאסף", marking: "שומר…", collectError: "לא ניתן לעדכן את השובר.",
     off: "הנחה", unused: "טרם נוצל", used: "נוצל", usedOn: "על {order}",
+    searchPlaceholder: "חיפוש לפי קוד, לקוח או הטבה…", noMatches: "אין מימושים התואמים לחיפוש.", inBoutique: "נאסף בחנות",
+    showing: "מציג {from}-{to} מתוך {total} מימושים",
+    filters: { all: "הכול", processing: "ממתין", used: "נוצל", collected: "נאסף" },
     discountAmount: "שווי השובר", discountHint: "סכום ההנחה בעת שימוש בקופה. השאירו 0 אם ההטבה נאספת בחנות.",
   },
   staff: {

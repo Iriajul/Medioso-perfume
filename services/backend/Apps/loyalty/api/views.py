@@ -1,7 +1,7 @@
+from django.db.models import Q
 from django.utils import timezone
 from rest_framework import mixins, serializers
 from rest_framework.decorators import action
-from rest_framework.filters import SearchFilter
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
@@ -94,23 +94,29 @@ class RedemptionSerializer(serializers.ModelSerializer):
 
 
 class RedemptionViewSet(mixins.ListModelMixin, GenericViewSet):
-    """Vouchers customers redeemed with points. `?status=processing|collected`, `?search=` code, name or email."""
+    """Vouchers customers redeemed with points.
+
+    `?search=` matches a voucher code (RD-00031), customer name, email or reward.
+    `?status=processing|used|collected`."""
 
     permission_classes = [IsAdminUser]
     serializer_class = RedemptionSerializer
-    filter_backends = [SearchFilter]
-    search_fields = ["customer__full_name", "customer__email", "reward__name"]
 
     def get_queryset(self):
         queryset = LoyaltyTransaction.objects.filter(kind=LoyaltyTransaction.Kind.REDEEMED).select_related(
             "customer", "reward", "branch", "fulfilled_by", "order")
-        status_filter = self.request.query_params.get("status")
-        if status_filter == "processing":
-            queryset = queryset.filter(fulfilled_at=None)
-        elif status_filter == "collected":
-            queryset = queryset.exclude(fulfilled_at=None)
-        if code := self.request.query_params.get("code"):
-            queryset = queryset.filter(pk=code.upper().removeprefix("RD-").lstrip("0") or 0)
+        match self.request.query_params.get("status"):
+            case "processing":
+                queryset = queryset.filter(fulfilled_at=None)
+            case "used":
+                queryset = queryset.exclude(fulfilled_at=None).filter(reward__discount_amount__gt=0)
+            case "collected":
+                queryset = queryset.exclude(fulfilled_at=None).filter(reward__discount_amount__lte=0)
+        if term := (self.request.query_params.get("search") or self.request.query_params.get("code") or "").strip():
+            digits = term.upper().removeprefix("RD-").lstrip("0")
+            queryset = queryset.filter(
+                Q(pk=digits) if digits.isdigit() else
+                Q(customer__full_name__icontains=term) | Q(customer__email__icontains=term) | Q(reward__name__icontains=term))
         return queryset
 
     def list(self, request, *args, **kwargs):
