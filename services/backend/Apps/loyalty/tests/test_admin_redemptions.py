@@ -38,8 +38,10 @@ class AdminRedemptionTests(APITestCase):
         self.assertEqual(data["pending_count"], 1)
         self.assertEqual(self.client.get(url, {"status": "collected"}).json()["count"], 0)
         self.assertEqual(self.client.get(url, {"search": "julien@example.com"}).json()["count"], 1)
-        self.assertEqual(self.client.get(url, {"code": f"RD-{self.entry.pk:05d}"}).json()["count"], 1)
-        self.assertEqual(self.client.get(url, {"code": "RD-09999"}).json()["count"], 0)
+        self.assertEqual(self.client.get(url, {"search": f"RD-{self.entry.pk:05d}"}).json()["count"], 1)
+        self.assertEqual(self.client.get(url, {"search": "RD-09999"}).json()["count"], 0)
+        self.assertEqual(self.client.get(url, {"search": "Julien"}).json()["count"], 1)
+        self.assertEqual(self.client.get(url, {"search": "Voucher"}).json()["count"], 1)  # reward name
 
     def test_collect_marks_voucher_and_notifies_customer(self):
         url = reverse("v1:loyalty:redemption-collect", args=[self.entry.pk])

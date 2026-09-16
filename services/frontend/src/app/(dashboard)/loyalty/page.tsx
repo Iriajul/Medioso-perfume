@@ -12,11 +12,18 @@ export type Reward = {
   eligibility: "all" | "gold" | "platinum" | "diamond"; description: string; image_url: string; is_active: boolean;
 };
 
-export default async function LoyaltyPage() {
+export default async function LoyaltyPage({ searchParams }: PageProps<"/loyalty">) {
+  const filters = await searchParams;
+  const query = typeof filters.q === "string" ? filters.q : "";
+  const status = typeof filters.status === "string" ? filters.status : "all";
+  const page = Math.max(1, Number(filters.page) || 1);
+  const redemptionQuery = new URLSearchParams({
+    page: String(page), ...(query && { search: query }), ...(status !== "all" && { status }),
+  });
   const [dict, lang, data, redemptions] = await Promise.all([
     getDictionary(), getLang(),
     apiGet<{ total_redemptions: number; redemptions_trend: number | null; results: Reward[] }>("/api/v1/admin/rewards/"),
-    apiGet<{ count: number; pending_count: number; results: Redemption[] }>("/api/v1/admin/redemptions/"),
+    apiGet<{ count: number; pending_count: number; results: Redemption[] }>(`/api/v1/admin/redemptions/?${redemptionQuery}`),
   ]);
   const t = dict.loyalty;
   const num = new Intl.NumberFormat(lang);
@@ -76,7 +83,7 @@ export default async function LoyaltyPage() {
         ))}
       </div>
 
-      <Redemptions t={t} common={dict.common} lang={lang} data={redemptions} />
+      <Redemptions t={t} common={dict.common} lang={lang} data={redemptions} query={query} status={status} page={page} />
     </div>
   );
 }
