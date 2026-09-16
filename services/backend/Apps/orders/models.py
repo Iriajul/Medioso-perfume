@@ -81,6 +81,7 @@ class OrderItem(models.Model):
     product = models.ForeignKey("catalog.Product", on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
     product_name = models.CharField(max_length=150)
     variant = models.CharField(max_length=100, blank=True, help_text='e.g. "100ml / Eau de Parfum"')
+    notes = models.CharField(max_length=255, blank=True, help_text="Scent notes, comma separated.")
     sku = models.CharField(max_length=20)
     image_url = models.URLField(max_length=500, blank=True)
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)
@@ -89,6 +90,10 @@ class OrderItem(models.Model):
     @property
     def line_total(self):
         return self.unit_price * self.quantity
+
+    @property
+    def notes_list(self):
+        return [n.strip() for n in self.notes.split(",") if n.strip()]
 
 
 class OrderStatusEvent(models.Model):

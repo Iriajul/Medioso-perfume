@@ -23,7 +23,7 @@ class AppOrderTests(APITestCase):
         cls.admin = User.objects.create_superuser(email="admin@madperfume.com", password="x", full_name="Admin")
         category = Category.objects.create(name="Oriental", type="exotic", image_url="https://x/c.png", image_public_id="c")
         img = [{"url": "https://x/p.png", "public_id": "p"}]
-        cls.oud = Product.objects.create(name="Velvet Oud", category=category, price="240.00", stock=3, size="100ml", images=img)
+        cls.oud = Product.objects.create(name="Velvet Oud", category=category, price="240.00", stock=3, size="100ml", notes="Oud, Saffron", images=img)
         cls.mist = Product.objects.create(name="Bergamot Mist", category=category, price="165.00", stock=10, size="50ml", images=img)
 
     def setUp(self):
@@ -40,7 +40,9 @@ class AppOrderTests(APITestCase):
 
         with self.assertNumQueries(2):  # auth + items with products
             cart = self.client.get(reverse("v1:orders:app-cart-list")).json()
-        self.assertEqual((cart["items_count"], cart["subtotal"], cart["items"][0]["variant"]), (3, "645.00", "100ml / Eau de Parfum"))
+        item = cart["items"][0]
+        self.assertEqual((cart["items_count"], cart["subtotal"]), (3, "645.00"))
+        self.assertEqual((item["variant"], item["category_name"]), ("100ml / Eau de Parfum", "Oriental"))
 
         mist = CartItem.objects.get(product=self.mist)
         self.assertEqual(self.client.patch(reverse("v1:orders:app-cart-detail", args=[mist.pk]), {"quantity": 4}).status_code, 200)
@@ -59,6 +61,8 @@ class AppOrderTests(APITestCase):
         self.assertEqual((data["subtotal"], data["tax"], data["shipping_fee"], data["total"]), ("405.00", "32.40", "0.00", "437.40"))
         self.assertEqual((data["status"], [e["status"] for e in data["events"]], data["client_secret"]), ("processing", ["pending_payment", "processing"], None))
         self.assertEqual((data["shipping_phone"], len(data["items"])), ("+33123456789", 2))
+        oud = next(i for i in data["items"] if i["product"] == self.oud.pk)
+        self.assertEqual((oud["notes"], oud["variant"]), (["Oud", "Saffron"], "100ml / Eau de Parfum"))
         self.oud.refresh_from_db()
         self.assertEqual(self.oud.stock, 2)
         self.assertFalse(CartItem.objects.exists())
