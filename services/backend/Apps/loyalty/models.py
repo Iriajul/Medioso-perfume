@@ -58,6 +58,9 @@ class LoyaltyTransaction(models.Model):
     balance_after = models.IntegerField()
     note = models.TextField(blank=True)
     fulfilled_at = models.DateTimeField(null=True, blank=True, help_text="When a redeemed reward was handed over.")
+    fulfilled_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="+",
+        help_text="Staff member who handed the reward over.")
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
 

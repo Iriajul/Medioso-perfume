@@ -124,6 +124,10 @@ const en = {
     selectCategory: "Select category...", eligibilityLabel: "Eligible Tiers", description: "Brief Description",
     descriptionPlaceholder: "Describe the exclusivity and olfactory notes of this reward...", discard: "Discard", save: "Add Reward", update: "Save Changes",
     saving: "Saving…", edit: "Edit", delete: "Delete", confirmDelete: "Delete this reward?", deleteError: "Unable to delete the reward.",
+    redemptionsTitle: "Redemptions", redemptionsSubtitle: "Vouchers customers redeemed with points. Mark one collected once the reward is handed over in a boutique.",
+    pendingCount: "{count} awaiting collection", noRedemptions: "No redemptions yet.", voucher: "Voucher", reward: "Reward", customer: "Customer",
+    points: "Points", date: "Redeemed", status: "Status", processing: "In Processing", collected: "Collected",
+    collectedBy: "by {name} · {branch}", markCollected: "Mark Collected", marking: "Saving…", collectError: "Unable to update this voucher.",
   },
   staff: {
     title: "Staff Management", subtitle: "Manage your professional fragrance consultants across all global branches.", add: "Add New Staff",
@@ -278,6 +282,10 @@ const ar: Dictionary = {
     selectCategory: "اختر الفئة...", eligibilityLabel: "الفئات المؤهلة", description: "وصف مختصر",
     descriptionPlaceholder: "صف تميز هذه المكافأة ونفحاتها العطرية...", discard: "تجاهل", save: "إضافة المكافأة", update: "حفظ التغييرات",
     saving: "جارٍ الحفظ…", edit: "تعديل", delete: "حذف", confirmDelete: "هل تريد حذف هذه المكافأة؟", deleteError: "تعذر حذف المكافأة.",
+    redemptionsTitle: "الاستبدالات", redemptionsSubtitle: "قسائم استبدلها العملاء بالنقاط. علّم القسيمة كمُستلمة بعد تسليم المكافأة في المتجر.",
+    pendingCount: "{count} بانتظار الاستلام", noRedemptions: "لا توجد استبدالات بعد.", voucher: "القسيمة", reward: "المكافأة", customer: "العميل",
+    points: "النقاط", date: "تاريخ الاستبدال", status: "الحالة", processing: "قيد المعالجة", collected: "تم الاستلام",
+    collectedBy: "بواسطة {name} · {branch}", markCollected: "تعليم كمُستلمة", marking: "جارٍ الحفظ…", collectError: "تعذر تحديث هذه القسيمة.",
   },
   staff: {
     title: "إدارة الموظفين", subtitle: "أدر مستشاري العطور المحترفين في جميع فروعك حول العالم.", add: "إضافة موظف جديد",
@@ -430,6 +438,10 @@ const he: Dictionary = {
     selectCategory: "בחרו קטגוריה...", eligibilityLabel: "דרגות זכאיות", description: "תיאור קצר",
     descriptionPlaceholder: "תארו את הבלעדיות ותווי הריח של ההטבה...", discard: "ביטול", save: "הוספת הטבה", update: "שמירת שינויים",
     saving: "שומר…", edit: "עריכה", delete: "מחיקה", confirmDelete: "למחוק את ההטבה?", deleteError: "לא ניתן למחוק את ההטבה.",
+    redemptionsTitle: "מימושים", redemptionsSubtitle: "שוברים שלקוחות מימשו בנקודות. סמנו כנאסף לאחר מסירת ההטבה בחנות.",
+    pendingCount: "{count} ממתינים לאיסוף", noRedemptions: "אין מימושים עדיין.", voucher: "שובר", reward: "הטבה", customer: "לקוח",
+    points: "נקודות", date: "תאריך מימוש", status: "סטטוס", processing: "בעיבוד", collected: "נאסף",
+    collectedBy: "על ידי {name} · {branch}", markCollected: "סימון כנאסף", marking: "שומר…", collectError: "לא ניתן לעדכן את השובר.",
   },
   staff: {
     title: "ניהול צוות", subtitle: "נהלו את יועצי הבשמים המקצועיים שלכם בכל הסניפים בעולם.", add: "הוספת איש צוות",
