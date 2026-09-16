@@ -266,6 +266,7 @@ REVIEW_POINTS = env.int("REVIEW_POINTS", default=50)
 TAX_RATE = env("TAX_RATE", default="0.08")
 SHIPPING_FEE = env("SHIPPING_FEE", default="0.00")
 DELIVERY_DAYS = env.int("DELIVERY_DAYS", default=3)
+FIREBASE_CREDENTIALS = env("FIREBASE_CREDENTIALS", default="")  # service account JSON; empty = inbox only, no push
 STRIPE_SECRET_KEY = env("STRIPE_SECRET_KEY", default="")
 STRIPE_WEBHOOK_SECRET = env("STRIPE_WEBHOOK_SECRET", default="")
 

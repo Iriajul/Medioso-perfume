@@ -119,7 +119,7 @@ class OrderViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, GenericView
                 order.save(update_fields=["status", "updated_at"])
                 OrderStatusEvent.objects.create(order=order, status=new_status)
                 if message := ORDER_MESSAGES.get(new_status):
-                    UserNotification.objects.create(
+                    UserNotification.deliver(
                         user_id=order.customer_id, category=UserNotification.Category.ORDERS, order=order,
                         title=message[0], body=message[1].format(order=order),
                     )

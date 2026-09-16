@@ -5,7 +5,7 @@ from rest_framework.viewsets import GenericViewSet
 
 from Apps.accounts.models import User
 from Apps.loyalty.services import TIERS
-from Apps.notifications.models import Notification, UserNotification
+from Apps.notifications.models import Notification, UserNotification, push_after_commit
 
 
 def audience_queryset(audience):
@@ -32,11 +32,12 @@ class NotificationSerializer(serializers.ModelSerializer):
             **validated_data, "recipients_count": len(recipients), "status": Notification.Status.SENT,
             "created_by": self.context["request"].user,
         })
-        UserNotification.objects.bulk_create(
+        rows = UserNotification.objects.bulk_create(
             (UserNotification(user_id=pk, broadcast=broadcast, category=UserNotification.Category.OFFERS,
                               title=broadcast.title, body=broadcast.body) for pk in recipients),
             batch_size=1000,
         )
+        push_after_commit(rows)
         return broadcast
 
 
