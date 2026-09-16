@@ -387,7 +387,7 @@
                 ""
               ]
             },
-            "description": "Send **only the fields that change**.\n\n**Editable:** `full_name`, `email`, `phone`, `shipping_address`, `language` (`en`|`ar`|`he`), `push_enabled`, `notify_collections`, `notify_rewards`, `notify_orders`.\n\nThis is what the Preference Center toggles and the Edit Profile screen save.\n\n**Responses**\n- `200` full profile\n- `400` `{\"phone\": [\"An account with this phone number already exists.\"]}`",
+            "description": "Send **only the fields that change**.\n\n**Editable:** `full_name`, `email`, `phone`, `shipping_address`, `language` (`en`|`ar`|`he`), `push_enabled`, `notify_collections`, `notify_rewards`, `notify_orders`.\n\nThis is what the Preference Center toggles and the Edit Profile screen save. The notify_* toggles control **push delivery only** — the in-app inbox always receives every notification.\n\n**Responses**\n- `200` full profile\n- `400` `{\"phone\": [\"An account with this phone number already exists.\"]}`",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"shipping_address\": \"14 Rue de la Paix, Paris\",\n  \"language\": \"en\",\n  \"notify_rewards\": false\n}",
@@ -487,7 +487,7 @@
                 ""
               ]
             },
-            "description": "Call after login and whenever the FCM token changes. Re-sending the same token just moves it to this user.\n\n**Body**\n- `token` — FCM registration token\n- `platform` — `ios` | `android`\n\n**Responses**\n- `201` `{token, platform}`\n\n_Push delivery starts once Firebase credentials are configured on the backend; registering now is safe._",
+            "description": "Call after login and whenever the FCM token changes. Re-sending the same token just moves it to this user.\n\n**Body**\n- `token` — FCM registration token\n- `platform` — `ios` | `android`\n\n**Responses**\n- `201` `{token, platform}`\n\n**Push is live** — Firebase is configured on the backend (project `mad-perfume`).\n\nYour side needs `google-services.json` (Android) and `GoogleService-Info.plist` + an **APNs key** uploaded in Firebase (iOS; without it iPhone push fails silently). Test on a real device — simulators don't receive push.\n\n**Payload delivered**\n```json\n{\n  \"notification\": { \"title\": \"Order delivered\", \"body\": \"Order MAD-00035 has been delivered.\" },\n  \"data\": { \"notification_id\": \"13\", \"category\": \"orders\", \"order_id\": \"35\" }\n}\n```\nNavigate by `data.category`; open Order Tracking when `order_id` is set. Dead tokens are deleted by the backend automatically.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"token\": \"fcm-registration-token\",\n  \"platform\": \"ios\"\n}",
@@ -1444,7 +1444,7 @@
                 }
               ]
             },
-            "description": "Notifications screen. **Paginated.** 20 per page. Response: `{count, next, previous, results[]}`. Use `?page=2` for the next page; `next` is `null` on the last page. Newest first.\n\n**Filters**\n| Param | Values |\n|---|---|\n| `category` | `offers` (Offers & Curations) \\| `rewards` (Loyalty & Rewards) \\| `orders` (Order Status) |\n| `is_read` | `true` \\| `false` |\n| `page` | page number |\n\n**Item shape**\n```json\n{\n  \"id\": 13, \"category\": \"orders\",\n  \"title\": \"Order delivered\",\n  \"body\": \"Order MAD-00035 has been delivered.\",\n  \"order\": 35, \"order_number\": \"MAD-00035\",\n  \"is_read\": false, \"created_at\": \"2026-09-15T11:01:56Z\"\n}\n```\n\nWhen `order` is set, tapping the row should open Order Tracking for that order."
+            "description": "Notifications screen. **Paginated.** 20 per page. Response: `{count, next, previous, results[]}`. Use `?page=2` for the next page; `next` is `null` on the last page. Newest first.\n\n**Filters**\n| Param | Values |\n|---|---|\n| `category` | `offers` (Offers & Curations) \\| `rewards` (Loyalty & Rewards) \\| `orders` (Order Status) |\n| `is_read` | `true` \\| `false` |\n| `page` | page number |\n\n**Item shape**\n```json\n{\n  \"id\": 13, \"category\": \"orders\",\n  \"title\": \"Order delivered\",\n  \"body\": \"Order MAD-00035 has been delivered.\",\n  \"order\": 35, \"order_number\": \"MAD-00035\",\n  \"is_read\": false, \"created_at\": \"2026-09-15T11:01:56Z\"\n}\n```\n\nWhen `order` is set, tapping the row should open Order Tracking for that order.\n\n**Sources:** `offers` = admin broadcasts; `rewards` = new tier, reward redeemed, voucher collected; `orders` = every status change.\n\nEach of these is **also pushed** to the customer's devices unless they switched that category off in their Preference Center. The inbox always receives it."
           },
           "response": [],
           "event": [
