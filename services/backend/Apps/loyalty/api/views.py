@@ -19,7 +19,7 @@ class RewardSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Reward
-        fields = ["id", "name", "points_required", "category", "eligibility", "description", "image", "image_url", "is_active"]
+        fields = ["id", "name", "points_required", "discount_amount", "category", "eligibility", "description", "image", "image_url", "is_active"]
         read_only_fields = ["image_url"]
 
     def validate(self, attrs):
@@ -70,19 +70,27 @@ class RedemptionSerializer(serializers.ModelSerializer):
     reward_image = serializers.CharField(source="reward.image_url", default=None, read_only=True)
     branch_name = serializers.CharField(source="branch.name", default=None, read_only=True)
     collected_by = serializers.CharField(source="fulfilled_by.full_name", default=None, read_only=True)
+    discount_amount = serializers.DecimalField(source="reward.discount_amount", max_digits=10, decimal_places=2, default=None, read_only=True)
+    used_on_order = serializers.SerializerMethodField()
     points = serializers.SerializerMethodField()
     status = serializers.SerializerMethodField()
 
     class Meta:
         model = LoyaltyTransaction
         fields = ["id", "voucher_code", "customer", "customer_name", "customer_email", "reward", "reward_name",
-                  "reward_image", "points", "channel", "branch_name", "status", "created_at", "fulfilled_at", "collected_by"]
+                  "reward_image", "points", "discount_amount", "channel", "branch_name", "status", "used_on_order",
+                  "created_at", "fulfilled_at", "collected_by"]
 
     def get_points(self, entry):
         return -entry.points
 
     def get_status(self, entry):
-        return "collected" if entry.fulfilled_at else "processing"
+        if not entry.fulfilled_at:
+            return "processing"
+        return "used" if entry.reward and entry.reward.discount_amount > 0 else "collected"
+
+    def get_used_on_order(self, entry):
+        return entry.order.number if entry.order_id else None
 
 
 class RedemptionViewSet(mixins.ListModelMixin, GenericViewSet):
@@ -95,7 +103,7 @@ class RedemptionViewSet(mixins.ListModelMixin, GenericViewSet):
 
     def get_queryset(self):
         queryset = LoyaltyTransaction.objects.filter(kind=LoyaltyTransaction.Kind.REDEEMED).select_related(
-            "customer", "reward", "branch", "fulfilled_by")
+            "customer", "reward", "branch", "fulfilled_by", "order")
         status_filter = self.request.query_params.get("status")
         if status_filter == "processing":
             queryset = queryset.filter(fulfilled_at=None)
@@ -118,6 +126,8 @@ class RedemptionViewSet(mixins.ListModelMixin, GenericViewSet):
         entry = self.get_object()
         if entry.fulfilled_at:
             raise serializers.ValidationError({"detail": "This voucher was already collected."})
+        if entry.reward and entry.reward.discount_amount > 0:
+            raise serializers.ValidationError({"detail": "Discount vouchers are marked used automatically at checkout."})
         branch = request.data.get("branch")
         entry.fulfilled_at = timezone.now()
         entry.fulfilled_by = request.user

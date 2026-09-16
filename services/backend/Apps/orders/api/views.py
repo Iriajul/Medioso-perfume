@@ -71,6 +71,7 @@ class InStorePurchaseSerializer(serializers.Serializer):
     customer = serializers.PrimaryKeyRelatedField(queryset=User.objects.filter(is_staff=False, is_active=True))
     branch = serializers.PrimaryKeyRelatedField(queryset=Branch.objects.all())
     amount = serializers.DecimalField(max_digits=10, decimal_places=2, min_value=Decimal("0.01"))
+    voucher_code = serializers.CharField(required=False, allow_blank=True)
     notes = serializers.CharField(required=False, allow_blank=True)
 
 
@@ -133,16 +134,22 @@ class OrderViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, GenericView
         data = InStorePurchaseSerializer(data=request.data)
         data.is_valid(raise_exception=True)
         v = data.validated_data
+        # A voucher comes off the amount, so points are earned on what the customer actually paid.
+        voucher = loyalty.voucher_for(v["customer"], v["voucher_code"]) if v.get("voucher_code") else None
+        discount = min(voucher.reward.discount_amount, v["amount"]) if voucher else Decimal("0")
         with transaction.atomic():
             order = Order.objects.create(
                 customer=v["customer"], channel=Order.Channel.BRANCH, branch=v["branch"], status=Order.Status.IN_STORE,
-                subtotal=v["amount"], total=v["amount"], payment_method=Order.PaymentMethod.IN_STORE,
+                subtotal=v["amount"], discount=discount, total=v["amount"] - discount, payment_method=Order.PaymentMethod.IN_STORE,
                 notes=v.get("notes", ""), created_by=request.user,
             )
             OrderStatusEvent.objects.create(order=order, status=order.status)
+            if voucher:
+                loyalty.spend_voucher(voucher, order, branch=v["branch"])
             entry = loyalty.earn_for_order(order, created_by=request.user)
         return Response(
-            {"order": order.number, "points": entry.points if entry else 0, "balance": entry.balance_after if entry else v["customer"].points_balance},
+            {"order": order.number, "discount": str(discount), "amount_due": str(order.total),
+             "points": entry.points if entry else 0, "balance": entry.balance_after if entry else v["customer"].points_balance},
             status=status.HTTP_201_CREATED,
         )
 

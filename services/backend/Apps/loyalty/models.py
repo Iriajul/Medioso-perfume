@@ -20,6 +20,9 @@ class Reward(models.Model):
     points_required = models.PositiveIntegerField()
     category = models.CharField(max_length=20, choices=Category.choices)
     eligibility = models.CharField(max_length=10, choices=Eligibility.choices, default=Eligibility.ALL)
+    discount_amount = models.DecimalField(
+        max_digits=10, decimal_places=2, default=0,
+        help_text="Money off a purchase when the voucher is used. 0 means the reward is collected in a boutique.")
     description = models.TextField(blank=True)
     image_url = models.URLField(max_length=500)
     image_public_id = models.CharField(max_length=255)
@@ -73,7 +76,9 @@ class LoyaltyTransaction(models.Model):
 
     @property
     def reference(self):
-        """Order / invoice number shown in transaction tables."""
+        """Voucher code for redemptions, otherwise the order / invoice number."""
+        if self.reason == self.Reason.REWARD:
+            return f"RD-{self.pk:05d}"  # stays the same after the voucher is spent on an order
         if self.order_id:
             return f"MAD-{self.order_id:05d}"
         return f"{'RV' if self.reason == self.Reason.REVIEW else 'RD'}-{self.pk:05d}"

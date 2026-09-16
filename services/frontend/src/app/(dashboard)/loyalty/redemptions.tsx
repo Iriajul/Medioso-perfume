@@ -6,8 +6,11 @@ import CollectButton from "./collect-button";
 export type Redemption = {
   id: number; voucher_code: string; customer_name: string; customer_email: string;
   reward_name: string | null; reward_image: string | null; points: number; branch_name: string | null;
-  status: "processing" | "collected"; created_at: string; fulfilled_at: string | null; collected_by: string | null;
+  discount_amount: string | null; used_on_order: string | null;
+  status: "processing" | "used" | "collected"; created_at: string; fulfilled_at: string | null; collected_by: string | null;
 };
+
+const isVoucher = (r: Redemption) => Number(r.discount_amount ?? 0) > 0;
 
 export default function Redemptions({ t, common, lang, data }: {
   t: Dictionary["loyalty"]; common: Dictionary["common"]; lang: string;
@@ -59,15 +62,23 @@ export default function Redemptions({ t, common, lang, data }: {
                       <span className="block font-medium text-gray-900">{r.customer_name}</span>
                       <span className="block text-sm text-gray-500">{r.customer_email}</span>
                     </td>
-                    <td className="px-6 py-5 font-semibold">{num.format(r.points)} {common.pts}</td>
+                    <td className="px-6 py-5 font-semibold">
+                      {num.format(r.points)} {common.pts}
+                      {isVoucher(r) && <span className="mt-1 block text-sm font-normal text-gray-500" dir="ltr">${r.discount_amount} {t.off}</span>}
+                    </td>
                     <td className="px-6 py-5 whitespace-nowrap">{date(r.created_at)}</td>
                     <td className="px-6 py-5">
-                      {r.status === "collected" ? (
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-green-50 px-3 py-1 text-sm font-semibold text-green-700">
-                          <BadgeCheck className="size-4" />{t.collected}
+                      {r.status === "processing" ? (
+                        <span className="inline-flex rounded-full bg-amber-50 px-3 py-1 text-sm font-semibold text-amber-700">
+                          {isVoucher(r) ? t.unused : t.processing}
                         </span>
                       ) : (
-                        <span className="inline-flex rounded-full bg-amber-50 px-3 py-1 text-sm font-semibold text-amber-700">{t.processing}</span>
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-green-50 px-3 py-1 text-sm font-semibold text-green-700">
+                          <BadgeCheck className="size-4" />{r.status === "used" ? t.used : t.collected}
+                        </span>
+                      )}
+                      {r.status === "used" && r.used_on_order && (
+                        <span className="mt-1 block text-sm text-gray-500" dir="ltr">{t.usedOn.replace("{order}", r.used_on_order)}</span>
                       )}
                       {r.status === "collected" && r.collected_by && (
                         <span className="mt-1 block text-sm text-gray-500">
@@ -76,7 +87,8 @@ export default function Redemptions({ t, common, lang, data }: {
                       )}
                     </td>
                     <td className="px-6 py-5 text-end">
-                      {r.status === "processing" && <CollectButton id={r.id} label={t.markCollected} saving={t.marking} errorText={t.collectError} />}
+                      {r.status === "processing" && !isVoucher(r) &&
+                        <CollectButton id={r.id} label={t.markCollected} saving={t.marking} errorText={t.collectError} />}
                     </td>
                   </tr>
                 ))}

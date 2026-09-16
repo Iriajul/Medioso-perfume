@@ -557,6 +557,7 @@ Idempotency-Key: 6f1c2b8e-5d4a-4c3b-9a8f-1e2d3c4b5a69
 | `shipping_city` | yes | |
 | `shipping_phone` | no | defaults to the profile phone |
 | `payment_method` | yes | `card` or `cod` |
+| `voucher_code` | no | reward voucher, e.g. `RD-00031`; its value comes off the order |
 
 **`201` (new order)** or **`200` (same Idempotency-Key sent again)**
 
@@ -585,6 +586,7 @@ Idempotency-Key: 6f1c2b8e-5d4a-4c3b-9a8f-1e2d3c4b5a69
     { "status": "pending_payment", "created_at": "2026-09-15T11:01:56.361788Z" }
   ],
   "subtotal": "320.00",
+  "discount": "0.00",
   "shipping_fee": "0.00",
   "tax": "25.60",
   "total": "345.60",
@@ -605,6 +607,7 @@ Idempotency-Key: 6f1c2b8e-5d4a-4c3b-9a8f-1e2d3c4b5a69
 ```json
 { "detail": "Your cart is empty." }
 { "detail": "Alpine Mist: only 1 left in stock." }
+{ "voucher_code": "This voucher has already been used." }
 { "payment_method": ["\"paypal\" is not a valid choice."] }
 ```
 
@@ -841,7 +844,24 @@ The user shows `voucher_code` at a boutique ("How to use": visit a boutique → 
 
 ### Redeemed rewards — `GET /app/redemptions/` (paginated)
 
-Items have the same shape as the redeem response. `status` is `processing` until the boutique hands the reward over, then `delivered` (with `fulfilled_at` set).
+The customer's voucher wallet. Items have the same shape as the redeem response, plus `discount_amount` and `used_on_order`.
+
+| `status` | Meaning |
+|---|---|
+| `processing` | not used / not collected yet |
+| `used` | discount voucher already spent — `used_on_order` names the order |
+| `delivered` | boutique reward handed over (`fulfilled_at` set) |
+
+**`?usable=true`** returns only unused discount vouchers. Use it at checkout to show a voucher picker, so the customer never has to type a code.
+
+### Vouchers at checkout
+
+Rewards with `discount_amount` greater than `0.00` are money-off vouchers; `0.00` means the reward is collected in a boutique.
+
+- Pass the code as `voucher_code` when placing an order. The discount comes off **before tax**, and never takes the total below zero.
+- A voucher works **once**, and only for the customer who redeemed it. It is marked used automatically — there is no separate "use" call.
+- The same code also works in a boutique: staff enter it on the admin Register Purchase screen.
+- Customers receive the code three ways: on the redeem confirmation, by email, and in their notification inbox.
 
 ---
 

@@ -1,6 +1,7 @@
 """Customer app: points summary, history, rewards shop and redemptions."""
 
 from django.conf import settings
+from django.db import transaction
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, serializers, status, viewsets
 from rest_framework.decorators import action
@@ -8,6 +9,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from Apps.loyalty import services as loyalty
+from Apps.loyalty.emails import send_voucher
 from Apps.loyalty.models import LoyaltyTransaction, Reward
 from Apps.notifications.models import UserNotification
 
@@ -73,7 +75,7 @@ class AppRewardSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Reward
-        fields = ["id", "name", "points_required", "category", "eligibility", "description", "image_url", "can_redeem"]
+        fields = ["id", "name", "points_required", "discount_amount", "category", "eligibility", "description", "image_url", "can_redeem"]
 
     def get_can_redeem(self, reward):
         return loyalty.can_redeem(self.context["request"].user, reward)
@@ -86,15 +88,24 @@ class RedemptionSerializer(serializers.ModelSerializer):
     points = serializers.SerializerMethodField()
     status = serializers.SerializerMethodField()
 
+    discount_amount = serializers.DecimalField(source="reward.discount_amount", max_digits=10, decimal_places=2, default=None)
+    used_on_order = serializers.SerializerMethodField()
+
     class Meta:
         model = LoyaltyTransaction
-        fields = ["id", "voucher_code", "reward", "name", "image_url", "points", "status", "created_at", "fulfilled_at"]
+        fields = ["id", "voucher_code", "reward", "name", "image_url", "points", "discount_amount", "status",
+                  "used_on_order", "created_at", "fulfilled_at"]
+
+    def get_used_on_order(self, entry):
+        return entry.order.number if entry.order_id else None
 
     def get_points(self, entry):
         return -entry.points
 
     def get_status(self, entry):
-        return "delivered" if entry.fulfilled_at else "processing"
+        if not entry.fulfilled_at:
+            return "processing"
+        return "used" if entry.reward and entry.reward.discount_amount > 0 else "delivered"
 
 
 class RewardViewSet(viewsets.ReadOnlyModelViewSet):
@@ -117,14 +128,22 @@ class RewardViewSet(viewsets.ReadOnlyModelViewSet):
         entry = loyalty.redeem(request.user, reward, channel="app")
         UserNotification.deliver(
             user=request.user, category=UserNotification.Category.REWARDS, title=f"{reward.name} redeemed",
-            body=f"Present voucher {entry.reference} at any MAD boutique to collect your reward.",
+            body=(f"Use code {entry.reference} for ${reward.discount_amount} off your next order, in the app or any boutique."
+                  if reward.discount_amount > 0 else
+                  f"Present voucher {entry.reference} at any MAD boutique to collect your reward."),
         )
+        transaction.on_commit(lambda: send_voucher(entry.pk))
         return Response(RedemptionSerializer(entry).data, status=status.HTTP_201_CREATED)
 
 
 class RedemptionListView(generics.ListAPIView):
+    """Redeemed rewards. `?usable=true` lists only unused discount vouchers, for the checkout picker."""
+
     serializer_class = RedemptionSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return self.request.user.loyalty_transactions.filter(kind=LoyaltyTransaction.Kind.REDEEMED).select_related("reward")
+        if self.request.query_params.get("usable") == "true":
+            return loyalty.usable_vouchers(self.request.user).select_related("order")
+        return self.request.user.loyalty_transactions.filter(
+            kind=LoyaltyTransaction.Kind.REDEEMED).select_related("reward", "order")

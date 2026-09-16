@@ -16,7 +16,7 @@ export async function lookupCustomer(email: string): Promise<Lookup | null> {
   return res?.ok ? res.json() : null;
 }
 
-export type RegisterState = { ok?: { order: string; points: number; balance: number }; errors?: string[] } | undefined;
+export type RegisterState = { ok?: { order: string; points: number; balance: number; discount: string; amount_due: string }; errors?: string[] } | undefined;
 
 export async function registerPurchase(_: RegisterState, formData: FormData): Promise<RegisterState> {
   const res = await apiJson("/api/v1/admin/orders/in-store/", Object.fromEntries(formData));
