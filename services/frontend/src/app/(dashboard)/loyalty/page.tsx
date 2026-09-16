@@ -4,6 +4,7 @@ import DeleteButton from "@/components/delete-button";
 import { getDictionary, getLang } from "@/i18n/server";
 import { apiGet } from "@/lib/session";
 import { deleteReward } from "./actions";
+import Redemptions, { type Redemption } from "./redemptions";
 import RewardDialog from "./reward-dialog";
 
 export type Reward = {
@@ -12,9 +13,10 @@ export type Reward = {
 };
 
 export default async function LoyaltyPage() {
-  const [dict, lang, data] = await Promise.all([
+  const [dict, lang, data, redemptions] = await Promise.all([
     getDictionary(), getLang(),
     apiGet<{ total_redemptions: number; redemptions_trend: number | null; results: Reward[] }>("/api/v1/admin/rewards/"),
+    apiGet<{ count: number; pending_count: number; results: Redemption[] }>("/api/v1/admin/redemptions/"),
   ]);
   const t = dict.loyalty;
   const num = new Intl.NumberFormat(lang);
@@ -73,6 +75,8 @@ export default async function LoyaltyPage() {
           </article>
         ))}
       </div>
+
+      <Redemptions t={t} common={dict.common} lang={lang} data={redemptions} />
     </div>
   );
 }

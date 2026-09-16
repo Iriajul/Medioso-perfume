@@ -16,3 +16,9 @@ export async function deleteReward(id: number) {
   if (res?.ok) revalidatePath("/loyalty");
   return res?.ok ?? false;
 }
+
+export async function collectRedemption(id: number) {
+  const res = await apiFetch(`/api/v1/admin/redemptions/${id}/collect/`, { method: "POST" });
+  if (res?.ok) revalidatePath("/loyalty");
+  return res?.ok ?? false;
+}
