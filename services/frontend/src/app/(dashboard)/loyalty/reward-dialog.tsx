@@ -63,6 +63,13 @@ export default function RewardDialog({ t, reward }: { t: Dictionary["loyalty"]; 
                   <Star className="absolute end-3 top-1/2 size-5 -translate-y-1/2 text-brand-light" />
                 </span>
               </label>
+              <label className="block"><span className={label}>{t.discountAmount}</span>
+                <span className="relative mt-3 block">
+                  <input name="discount_amount" type="number" min="0" step="0.01" defaultValue={reward?.discount_amount ?? "0.00"} placeholder="20.00" className={`${field} pe-10`} dir="ltr" />
+                  <span className="absolute end-3 top-1/2 -translate-y-1/2 text-brand-light">$</span>
+                </span>
+                <span className="mt-2 block text-sm font-normal normal-case tracking-normal text-gray-600">{t.discountHint}</span>
+              </label>
               <label className="block"><span className={label}>{t.category}</span>
                 <select name="category" required defaultValue={reward?.category ?? ""} className={`${field} mt-3`}>
                   <option value="" disabled>{t.selectCategory}</option>

@@ -84,3 +84,33 @@ def redeem(customer, reward, channel, branch=None, created_by=None):
         customer.pk, kind="redeemed", reason="reward", channel=channel, branch=branch, reward=reward,
         points=-reward.points_required, created_by=created_by, fulfilled_at=timezone.now() if channel == "branch" else None,
     )
+
+
+def usable_vouchers(user):
+    """Discount vouchers this customer redeemed and hasn't spent yet."""
+    return LoyaltyTransaction.objects.filter(
+        customer=user, kind=LoyaltyTransaction.Kind.REDEEMED, fulfilled_at=None, reward__discount_amount__gt=0,
+    ).select_related("reward")
+
+
+def voucher_for(user, code):
+    """The unused voucher matching `code` for this customer, or a ValidationError explaining why not."""
+    digits = str(code).strip().upper().removeprefix("RD-").lstrip("0")
+    entry = LoyaltyTransaction.objects.filter(
+        pk=digits or 0, customer=user, kind=LoyaltyTransaction.Kind.REDEEMED).select_related("reward").first()
+    if not entry:
+        raise ValidationError({"voucher_code": "This voucher code isn't valid for your account."})
+    if entry.fulfilled_at:
+        raise ValidationError({"voucher_code": "This voucher has already been used."})
+    if not entry.reward or entry.reward.discount_amount <= 0:
+        raise ValidationError({"voucher_code": "This reward is collected in a boutique, not used as a discount."})
+    return entry
+
+
+def spend_voucher(entry, order, branch=None):
+    """Marks a voucher used on an order. Returns the money taken off."""
+    entry.fulfilled_at = timezone.now()
+    entry.order = order
+    entry.branch = branch or entry.branch
+    entry.save(update_fields=["fulfilled_at", "order", "branch"])
+    return entry.reward.discount_amount

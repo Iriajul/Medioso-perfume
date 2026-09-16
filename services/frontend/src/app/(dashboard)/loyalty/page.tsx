@@ -8,7 +8,7 @@ import Redemptions, { type Redemption } from "./redemptions";
 import RewardDialog from "./reward-dialog";
 
 export type Reward = {
-  id: number; name: string; points_required: number; category: "physical_product" | "experience" | "service";
+  id: number; name: string; points_required: number; discount_amount: string; category: "physical_product" | "experience" | "service";
   eligibility: "all" | "gold" | "platinum" | "diamond"; description: string; image_url: string; is_active: boolean;
 };
 

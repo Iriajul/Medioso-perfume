@@ -11,6 +11,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from Apps.catalog.models import Product
+from Apps.loyalty import services as loyalty
 from Apps.orders.emails import send_invoice
 from Apps.orders.models import CartItem, Order, OrderItem, OrderStatusEvent
 
@@ -93,6 +94,7 @@ class CheckoutSerializer(serializers.Serializer):
     shipping_city = serializers.CharField(max_length=100)
     shipping_phone = serializers.CharField(max_length=30, required=False, allow_blank=True)
     payment_method = serializers.ChoiceField(choices=[Order.PaymentMethod.CARD, Order.PaymentMethod.COD])
+    voucher_code = serializers.CharField(required=False, allow_blank=True, help_text="Reward voucher, e.g. RD-00031")
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
@@ -121,7 +123,7 @@ class AppOrderSerializer(serializers.ModelSerializer):
         model = Order
         fields = [
             "id", "number", "status", "channel", "branch_name", "created_at", "estimated_delivery", "items", "events",
-            "subtotal", "shipping_fee", "tax", "total", "payment_method", "card_last4",
+            "subtotal", "discount", "shipping_fee", "tax", "total", "payment_method", "card_last4",
             "shipping_name", "shipping_address", "shipping_city", "shipping_phone",
         ]
 
@@ -180,11 +182,15 @@ class OrderViewSet(mixins.CreateModelMixin, viewsets.ReadOnlyModelViewSet):
                 raise serializers.ValidationError({"detail": f"{item.product.name}: only {products[item.product_id].stock} left in stock."})
 
         subtotal = sum((i.product.price * i.quantity for i in cart), Decimal("0"))
-        tax = (subtotal * Decimal(settings.TAX_RATE)).quantize(CENTS, ROUND_HALF_UP)
+        # A voucher comes off before tax, and never takes the order below zero.
+        voucher = loyalty.voucher_for(user, data["voucher_code"]) if data.get("voucher_code") else None
+        discount = min(voucher.reward.discount_amount, subtotal) if voucher else Decimal("0")
+        tax = ((subtotal - discount) * Decimal(settings.TAX_RATE)).quantize(CENTS, ROUND_HALF_UP)
         shipping = Decimal(settings.SHIPPING_FEE)
         cod = data["payment_method"] == Order.PaymentMethod.COD
         order = Order.objects.create(
-            customer=user, channel=Order.Channel.APP, subtotal=subtotal, tax=tax, shipping_fee=shipping, total=subtotal + tax + shipping,
+            customer=user, channel=Order.Channel.APP, subtotal=subtotal, discount=discount, tax=tax, shipping_fee=shipping,
+            total=subtotal - discount + tax + shipping,
             status=Order.Status.PROCESSING if cod else Order.Status.PENDING_PAYMENT, payment_method=data["payment_method"],
             shipping_name=data["shipping_name"], shipping_address=data["shipping_address"], shipping_city=data["shipping_city"],
             shipping_phone=data.get("shipping_phone") or user.phone, idempotency_key=idempotency_key,
@@ -199,6 +205,8 @@ class OrderViewSet(mixins.CreateModelMixin, viewsets.ReadOnlyModelViewSet):
             [OrderStatusEvent(order=order, status=Order.Status.PENDING_PAYMENT)]
             + ([OrderStatusEvent(order=order, status=Order.Status.PROCESSING)] if cod else [])
         )
+        if voucher:
+            loyalty.spend_voucher(voucher, order)
         CartItem.objects.filter(user=user).delete()
         if cod:
             transaction.on_commit(lambda: send_invoice(order.pk))

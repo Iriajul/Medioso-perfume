@@ -34,6 +34,7 @@ class Order(models.Model):
 
     subtotal = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0"))
     shipping_method = models.CharField(max_length=50, blank=True)
+    discount = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0"))
     shipping_fee = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0"))
     tax = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0"))
     total = models.DecimalField(max_digits=10, decimal_places=2)

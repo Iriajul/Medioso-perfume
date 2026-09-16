@@ -1097,10 +1097,10 @@
                 ""
               ]
             },
-            "description": "Turns the whole cart into an order, reserves stock and empties the cart.\n\n### Headers\n- `Idempotency-Key` — **required in the app** (Postman fills it with a random UUID per send). Generate ONE uuid when the user taps *Place order* and reuse it for every retry of that same attempt.\n\n### Body\n| Field | Required | Notes |\n|---|---|---|\n| `shipping_name` | yes | |\n| `shipping_address` | yes | |\n| `shipping_city` | yes | |\n| `shipping_phone` | no | falls back to the profile phone |\n| `payment_method` | yes | `card` or `cod` |\n\n### Responses\n- `201` order created\n- `200` **same `Idempotency-Key` sent again** → the same order, no duplicate\n- `400` `{\"detail\": \"Your cart is empty.\"}`\n- `400` `{\"detail\": \"Alpine Mist: only 1 left in stock.\"}`\n\n`card` → `status: \"pending_payment\"` + `client_secret` for the Stripe sheet.\n`cod` → `status: \"processing\"`, `client_secret: null`, invoice emailed right away.\n\nThe response includes `number`, `status`, `items[]` (with `variant` and scent `notes`), `events[]`, `subtotal`, `tax` (8%), `shipping_fee`, `total`, `estimated_delivery`, and the shipping fields.",
+            "description": "Turns the whole cart into an order, reserves stock and empties the cart.\n\n### Headers\n- `Idempotency-Key` — **required in the app** (Postman fills it with a random UUID per send). Generate ONE uuid when the user taps *Place order* and reuse it for every retry of that same attempt.\n\n### Body\n| Field | Required | Notes |\n|---|---|---|\n| `shipping_name` | yes | |\n| `shipping_address` | yes | |\n| `shipping_city` | yes | |\n| `shipping_phone` | no | falls back to the profile phone |\n| `payment_method` | yes | `card` or `cod` |\n| `voucher_code` | no | reward voucher, e.g. `RD-00031` — takes its value off the order |\n\n### Responses\n- `201` order created\n- `200` **same `Idempotency-Key` sent again** → the same order, no duplicate\n- `400` `{\"detail\": \"Your cart is empty.\"}`\n- `400` `{\"detail\": \"Alpine Mist: only 1 left in stock.\"}`\n- `400` `{\"voucher_code\": \"This voucher has already been used.\"}` (also: not valid for your account, or a boutique-collected reward)\n\nThe response carries a `discount` line; tax is charged on the discounted amount.\n\n`card` → `status: \"pending_payment\"` + `client_secret` for the Stripe sheet.\n`cod` → `status: \"processing\"`, `client_secret: null`, invoice emailed right away.\n\nThe response includes `number`, `status`, `items[]` (with `variant` and scent `notes`), `events[]`, `subtotal`, `tax` (8%), `shipping_fee`, `total`, `estimated_delivery`, and the shipping fields.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"shipping_name\": \"Sophia Laurent\",\n  \"shipping_address\": \"14 Rue de la Paix\",\n  \"shipping_city\": \"Paris\",\n  \"shipping_phone\": \"+33612345678\",\n  \"payment_method\": \"card\"\n}",
+              "raw": "{\n  \"shipping_name\": \"Sophia Laurent\",\n  \"shipping_address\": \"14 Rue de la Paix\",\n  \"shipping_city\": \"Paris\",\n  \"shipping_phone\": \"+33612345678\",\n  \"payment_method\": \"card\",\n  \"voucher_code\": \"\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1309,7 +1309,7 @@
                 }
               ]
             },
-            "description": "Active rewards, cheapest first. **Not paginated.**\n\n**Filter:** `category` = `physical_product` | `experience` | `service`\n\n**Item shape**\n```json\n{\n  \"id\": 3, \"name\": \"$20 Voucher\", \"points_required\": 400,\n  \"category\": \"service\", \"eligibility\": \"all\",\n  \"description\": \"…\", \"image_url\": \"https://…\",\n  \"can_redeem\": true\n}\n```\n\n- `can_redeem` already combines **balance** and **tier**: use it to enable the Redeem button and the \"AVAILABLE TO REDEEM\" badge.\n- `eligibility` is a **minimum tier** (`all`, `gold`, `platinum`, `diamond`)."
+            "description": "Active rewards, cheapest first. **Not paginated.**\n\n**Filter:** `category` = `physical_product` | `experience` | `service`\n\n**Item shape**\n```json\n{\n  \"id\": 3, \"name\": \"$20 Voucher\", \"points_required\": 400,\n  \"category\": \"service\", \"eligibility\": \"all\",\n  \"description\": \"…\", \"image_url\": \"https://…\",\n  \"discount_amount\": \"20.00\",\n  \"can_redeem\": true\n}\n```\n\n- `can_redeem` already combines **balance** and **tier**: use it to enable the Redeem button and the \"AVAILABLE TO REDEEM\" badge.\n- `discount_amount` > 0 means the reward is a **money-off voucher** used at checkout; `0.00` means it is collected in a boutique.\n- `eligibility` is a **minimum tier** (`all`, `gold`, `platinum`, `diamond`)."
           },
           "response": [],
           "event": [
@@ -1364,7 +1364,7 @@
                 ""
               ]
             },
-            "description": "**No body.** Deducts the points and issues a voucher.\n\n**Responses**\n- `201`\n```json\n{\n  \"id\": 31, \"voucher_code\": \"RD-00031\", \"reward\": 3,\n  \"name\": \"$20 Voucher\", \"image_url\": \"https://…\",\n  \"points\": 400, \"status\": \"processing\",\n  \"created_at\": \"2026-09-15T12:10:00Z\", \"fulfilled_at\": null\n}\n```\n- `400` `{\"detail\": \"This reward isn't available for your points or tier yet.\"}`\n\nShow `voucher_code` at a boutique to collect. A rewards notification is also added to the inbox."
+            "description": "**No body.** Deducts the points and issues a voucher.\n\n**Responses**\n- `201`\n```json\n{\n  \"id\": 31, \"voucher_code\": \"RD-00031\", \"reward\": 3,\n  \"name\": \"$20 Voucher\", \"image_url\": \"https://…\",\n  \"points\": 400, \"status\": \"processing\",\n  \"created_at\": \"2026-09-15T12:10:00Z\", \"fulfilled_at\": null\n}\n```\n- `400` `{\"detail\": \"This reward isn't available for your points or tier yet.\"}`\n\nThe customer also receives the code by email and in their notification inbox.\n\n- **Discount voucher** (`discount_amount` > 0): pass the code as `voucher_code` at checkout, or show it in a boutique.\n- **Boutique reward** (`discount_amount` = 0): show the code at a boutique to collect. A rewards notification is also added to the inbox."
           },
           "response": []
         },
@@ -1374,7 +1374,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/app/redemptions/?",
+              "raw": "{{base_url}}/app/redemptions/",
               "host": [
                 "{{base_url}}"
               ],
@@ -1385,6 +1385,12 @@
               ],
               "query": [
                 {
+                  "key": "usable",
+                  "value": "true",
+                  "description": "Only unused discount vouchers — use this for the checkout voucher picker",
+                  "disabled": true
+                },
+                {
                   "key": "page",
                   "value": "2",
                   "description": "Page number (20 per page)",
@@ -1392,7 +1398,7 @@
                 }
               ]
             },
-            "description": "\"Your Exclusive Collection\" list. **Paginated.** 20 per page. Response: `{count, next, previous, results[]}`. Use `?page=2` for the next page; `next` is `null` on the last page.\n\nSame shape as the redeem response.\n\n`status`: `processing` until the boutique hands it over, then `delivered` (with `fulfilled_at` set)."
+            "description": "\"Your Exclusive Collection\" list, and the customer's voucher wallet. **Paginated.**\n\nEach entry: `voucher_code`, `discount_amount`, `status`, `used_on_order`.\n\n- `status` `processing` — a boutique reward not collected yet, or a voucher not used yet\n- `status` `used` — a discount voucher already spent (`used_on_order` names the order)\n- `status` `delivered` — a boutique reward handed over\n\n**`?usable=true`** returns only unused discount vouchers: use it at checkout so the customer picks a voucher instead of typing a code."
           },
           "response": []
         }

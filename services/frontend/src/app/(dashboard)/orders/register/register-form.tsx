@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { startTransition, useActionState, useRef, useState, useTransition } from "react";
-import { Award, Mail, PlusCircle, Search, Star, Store, Tag } from "lucide-react";
+import { Award, Mail, PlusCircle, Search, Star, Store, Tag, Ticket } from "lucide-react";
 import Avatar from "@/components/avatar";
 import type { Dictionary } from "@/i18n/dictionaries";
 import { lookupCustomer, registerPurchase, type Lookup, type RegisterState } from "../actions";
@@ -18,6 +18,7 @@ export default function RegisterForm({ t, tiers, pointsLabel, branches, rate }: 
   const [customer, setCustomer] = useState<Lookup | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [amount, setAmount] = useState("");
+  const [voucher, setVoucher] = useState("");
   const [searching, startSearch] = useTransition();
   const [state, action, pending] = useActionState(async (prev: RegisterState, formData: FormData) => {
     const result = await registerPurchase(prev, formData);
@@ -25,12 +26,14 @@ export default function RegisterForm({ t, tiers, pointsLabel, branches, rate }: 
     return result;
   }, undefined);
 
+  // The voucher's value is only known once the server applies it; points follow the amount actually paid.
   const points = Math.floor((Number(amount) || 0) * rate);
   const num = (n: number) => n.toLocaleString();
 
   function reset(clearEmail = true) {
     form.current?.reset();
     setAmount("");
+    setVoucher("");
     setCustomer(null);
     if (clearEmail) setEmail("");
   }
@@ -111,6 +114,15 @@ export default function RegisterForm({ t, tiers, pointsLabel, branches, rate }: 
         </label>
         <p className="mt-3 text-sm italic text-gray-700">{t.exchange.replace("{rate}", String(rate))}</p>
 
+        <label className="mt-6 block text-xs font-semibold uppercase tracking-[0.12em] text-gray-700">{t.voucher}
+          <span className="relative mt-3 block">
+            <Ticket className="absolute start-4 top-1/2 size-5 -translate-y-1/2 text-gray-600" />
+            <input name="voucher_code" value={voucher} onChange={(e) => setVoucher(e.target.value.toUpperCase())} placeholder={t.voucherPlaceholder}
+              className="w-full rounded-xl bg-white py-4 pe-4 ps-12 text-base normal-case tracking-normal text-gray-900 placeholder:text-gray-500 shadow-sm outline-none" dir="ltr" />
+          </span>
+          <span className="mt-2 block text-sm font-normal normal-case tracking-normal text-gray-600">{t.voucherHint}</span>
+        </label>
+
         <div className="mt-8 flex items-center justify-between rounded-xl border border-blue-200 bg-[#e3e8f7] px-6 py-5">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-light">{t.pointsToEarn}</p>
@@ -127,6 +139,7 @@ export default function RegisterForm({ t, tiers, pointsLabel, branches, rate }: 
         {state?.ok && !customer && (
           <p role="status" className="mt-4 rounded-xl bg-green-50 px-4 py-3 text-sm text-green-700">
             {t.success.replace("{order}", `#${state.ok.order}`).replace("{points}", num(state.ok.points)).replace("{balance}", num(state.ok.balance))}
+            {Number(state.ok.discount) > 0 && " " + t.voucherApplied.replace("{discount}", `$${state.ok.discount}`).replace("{due}", `$${state.ok.amount_due}`)}
           </p>
         )}
 
