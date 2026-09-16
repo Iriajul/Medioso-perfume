@@ -8,6 +8,7 @@ Everything the customer app needs from the backend: auth, catalog, cart and chec
 | **Interactive docs (Swagger)** | `https://staging-api.bpmstudio.pt/api/docs/` |
 | **Stripe publishable key (sandbox)** | Ask the backend owner (`pk_test_…`) |
 | **Content type** | `application/json`, except avatar upload (`multipart/form-data`) |
+| **Postman** | `docs/postman/MadPerfume-App-API.postman_collection.json` + `docs/postman/MadPerfume-Staging.postman_environment.json` |
 
 All paths below are relative to the base URL, e.g. `POST /app/auth/login/` → `https://staging-api.bpmstudio.pt/api/v1/app/auth/login/`. Trailing slashes are required.
 
