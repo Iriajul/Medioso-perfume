@@ -1,0 +1,1604 @@
+{
+  "info": {
+    "_postman_id": "7c2f9b41-5a3e-4d61-9f28-0a1b2c3d4e5f",
+    "name": "Mad Perfume — Customer App API",
+    "description": "# Mad Perfume — Customer App API\n\nEverything the mobile app needs. Requests are grouped by screen area; each one documents its body, query filters, pagination and possible statuses.\n\n## Start here\n1. Select the environment **Mad Perfume — Staging** (top right).\n2. Run **Auth → Register** (or **Login**). The access and refresh tokens are saved automatically; every other request uses them.\n3. Run **Catalog → Products**, then **Cart → Add to cart**, then **Orders → Place order**. Ids (`product_id`, `cart_item_id`, `order_id`, …) are captured automatically as you go.\n\n## Conventions\n- **Auth:** `Authorization: Bearer {{access_token}}` is set at collection level; public endpoints override it to *No Auth*.\n- **Tokens:** access lasts 60 min, refresh 30 days and **rotates** — always store both from the response. On `401`, call *Refresh token* once; if that fails too, sign the user out.\n- **Pagination:** paginated endpoints return `{count, next, previous, results[]}` at 20 per page; use `?page=N`. Categories, banners, cart and rewards return plain arrays/objects.\n- **Money:** strings with 2 decimals (`\"160.00\"`), USD. Tax is 8%, shipping is currently free.\n- **Dates:** ISO 8601 UTC (`\"2026-09-15T11:01:56Z\"`); `estimated_delivery` is a plain date.\n- **Errors:** `400` `{\"field\": [\"message\"]}` or `{\"detail\": \"message\"}`; `401` missing/expired token; `404` also means \"belongs to another user\"; `429` throttled (auth endpoints allow 10/min).\n\n## Payments in one line\n`POST /app/orders/` with `payment_method: \"card\"` → open Stripe PaymentSheet with the returned `client_secret` → poll `GET /app/orders/{id}/` until `status` is `\"paid\"`. Never mark an order paid from the app.\n\nFull written guide: `docs/mobile-app-api.md` in the backend repo. Live schema: https://staging-api.bpmstudio.pt/api/docs/",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{access_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "1. Auth",
+      "description": "Register, login (email **or** phone), token refresh, logout and the 3-step password reset by emailed code.",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/app/auth/register/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "app",
+                "auth",
+                "register",
+                ""
+              ]
+            },
+            "description": "Create a customer account. Returns JWT tokens, so the user is signed in immediately.\n\n**Body**\n- `full_name` (required)\n- `email` (required, unique)\n- `phone` (required, unique)\n- `password` (required) — min 8 chars, at least one number and one special character, not similar to name/email\n\n**Responses**\n- `201` `{access, refresh}` — saved automatically into the collection variables\n- `400` `{\"email\": [\"An account with this email already exists.\"]}`\n- `400` `{\"phone\": [...]}, {\"password\": [...]}`\n- `429` throttled (10/min)",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"Sophia Laurent\",\n  \"email\": \"sophia@example.com\",\n  \"phone\": \"+33612345678\",\n  \"password\": \"Velvet#Oud2026\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const d = pm.response.json();",
+                  "if (d.access) { pm.collectionVariables.set('access_token', d.access); }",
+                  "if (d.refresh) { pm.collectionVariables.set('refresh_token', d.refresh); }",
+                  "pm.test('tokens received', () => pm.expect(pm.response.code).to.be.oneOf([200, 201]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/app/auth/login/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "app",
+                "auth",
+                "login",
+                ""
+              ]
+            },
+            "description": "Sign in with **email or phone**.\n\n**Body**\n- `identifier` — email address or phone number\n- `password`\n\n**Responses**\n- `200` `{access, refresh}` — saved automatically\n- `400` `{\"detail\": [\"Invalid email/phone or password.\"]}`\n- `429` throttled (10/min)",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"sophia@example.com\",\n  \"password\": \"Velvet#Oud2026\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const d = pm.response.json();",
+                  "if (d.access) { pm.collectionVariables.set('access_token', d.access); }",
+                  "if (d.refresh) { pm.collectionVariables.set('refresh_token', d.refresh); }",
+                  "pm.test('tokens received', () => pm.expect(pm.response.code).to.be.oneOf([200, 201]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Refresh token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/refresh/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "refresh",
+                ""
+              ]
+            },
+            "description": "Exchange the refresh token for a new pair.\n\n**Important:** refresh tokens rotate — the old one stops working, so always store both values from the response.\n\n**Responses**\n- `200` `{access, refresh}` — saved automatically\n- `401` `{\"detail\": \"Token is invalid or expired\"}` → send the user to login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh\": \"{{refresh_token}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const d = pm.response.json();",
+                  "if (d.access) { pm.collectionVariables.set('access_token', d.access); }",
+                  "if (d.refresh) { pm.collectionVariables.set('refresh_token', d.refresh); }",
+                  "pm.test('tokens received', () => pm.expect(pm.response.code).to.be.oneOf([200, 201]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/logout/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "logout",
+                ""
+              ]
+            },
+            "description": "Blacklist the refresh token. Also call **Devices → Unregister device** so the phone stops receiving push.\n\n**Responses**\n- `200` `{}`\n- `400` token already blacklisted/invalid",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh\": \"{{refresh_token}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Forgot password — 1. send code",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/app/auth/password-reset/code/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "app",
+                "auth",
+                "password-reset",
+                "code",
+                ""
+              ]
+            },
+            "description": "Emails a 6-digit code, valid **10 minutes**.\n\n**Responses**\n- `204` always, even for unknown emails (so nobody can discover which emails exist). Show \"check your inbox\" either way.\n- `429` throttled (10/min)",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"sophia@example.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Forgot password — 2. verify code",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/app/auth/password-reset/verify/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "app",
+                "auth",
+                "password-reset",
+                "verify",
+                ""
+              ]
+            },
+            "description": "Exchange the emailed code for a reset token.\n\n**Responses**\n- `200` `{uid, token}` — pass both to step 3 (saved automatically into `reset_uid` / `reset_token`)\n- `400` `{\"code\": \"Invalid or expired code.\"}` — the code locks after **5 wrong attempts**; request a new one",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"sophia@example.com\",\n  \"code\": \"482913\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const d = pm.response.json();",
+                  "if (d.uid) { pm.collectionVariables.set('reset_uid', d.uid); pm.collectionVariables.set('reset_token', d.token); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Forgot password — 3. set new password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/password-reset/confirm/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "password-reset",
+                "confirm",
+                ""
+              ]
+            },
+            "description": "Sets the new password using `uid` + `token` from step 2.\n\n**Responses**\n- `204` done — all sessions are signed out, so send the user to login\n- `400` `{\"token\": \"This reset link is invalid or has expired.\"}`\n- `400` `{\"password\": [\"...\"]}` password rules",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"uid\": \"{{reset_uid}}\",\n  \"token\": \"{{reset_token}}\",\n  \"password\": \"Amber#Musk2027\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "2. Profile & Devices",
+      "description": "Profile, Settings toggles, Security (change password) and push device tokens.",
+      "item": [
+        {
+          "name": "Get my profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/app/me/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "app",
+                "me",
+                ""
+              ]
+            },
+            "description": "Profile + settings + points balance and tier. Use it to prefill Checkout and the Settings screens.\n\n**Response `200`**\n```json\n{\n  \"id\": 27, \"full_name\": \"Sophia Laurent\", \"email\": \"sophia@example.com\",\n  \"phone\": \"+33612345678\", \"shipping_address\": \"\", \"avatar_url\": \"\", \"language\": \"en\",\n  \"push_enabled\": true, \"notify_collections\": true, \"notify_rewards\": true, \"notify_orders\": true,\n  \"points_balance\": 0, \"tier\": \"silver\"\n}\n```"
+          },
+          "response": []
+        },
+        {
+          "name": "Update profile / settings",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/app/me/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "app",
+                "me",
+                ""
+              ]
+            },
+            "description": "Send **only the fields that change**.\n\n**Editable:** `full_name`, `email`, `phone`, `shipping_address`, `language` (`en`|`ar`|`he`), `push_enabled`, `notify_collections`, `notify_rewards`, `notify_orders`.\n\nThis is what the Preference Center toggles and the Edit Profile screen save.\n\n**Responses**\n- `200` full profile\n- `400` `{\"phone\": [\"An account with this phone number already exists.\"]}`",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"shipping_address\": \"14 Rue de la Paix, Paris\",\n  \"language\": \"en\",\n  \"notify_rewards\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Upload avatar",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/app/me/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "app",
+                "me",
+                ""
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "avatar",
+                  "type": "file",
+                  "src": [],
+                  "description": "PNG, JPG or WebP, max 10MB"
+                }
+              ]
+            },
+            "description": "**multipart/form-data** (do not set Content-Type by hand — Postman/the HTTP client sets the boundary).\n\nPick a file for the `avatar` key, then send.\n\n**Responses**\n- `200` full profile with the new `avatar_url` (hosted on Cloudinary)\n- `400` `{\"avatar\": [\"Image must be PNG, JPG or WebP.\"]}` or `[\"Image must be 10MB or smaller.\"]`"
+          },
+          "response": []
+        },
+        {
+          "name": "Change password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/app/me/change-password/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "app",
+                "me",
+                "change-password",
+                ""
+              ]
+            },
+            "description": "Security screen. \n\n**Responses**\n- `204` changed — refresh tokens are revoked, so sign the user in again\n- `400` `{\"current_password\": [\"...\"]}` wrong current password\n- `400` `{\"password\": [\"...\"]}` rules not met",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"current_password\": \"Velvet#Oud2026\",\n  \"password\": \"Amber#Musk2027\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Register device (push)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/app/devices/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "app",
+                "devices",
+                ""
+              ]
+            },
+            "description": "Call after login and whenever the FCM token changes. Re-sending the same token just moves it to this user.\n\n**Body**\n- `token` — FCM registration token\n- `platform` — `ios` | `android`\n\n**Responses**\n- `201` `{token, platform}`\n\n_Push delivery starts once Firebase credentials are configured on the backend; registering now is safe._",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"fcm-registration-token\",\n  \"platform\": \"ios\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Unregister device",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/app/devices/{{device_token}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "app",
+                "devices",
+                "{{device_token}}",
+                ""
+              ]
+            },
+            "description": "Call on logout. Set the `device_token` collection variable first.\n\n**Responses**\n- `204` removed\n- `404` unknown token"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "3. Catalog",
+      "description": "Categories, home banners, products with search/filters/sorting, product detail, reviews and saved items.",
+      "item": [
+        {
+          "name": "Categories",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/app/categories/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "app",
+                "categories",
+                ""
+              ]
+            },
+            "description": "All collections, A→Z. **Public** (no token needed).\n\n**Not paginated** — returns a plain array.\n\n**Response `200`**\n```json\n[{\"id\": 7, \"name\": \"Floral\", \"type\": \"classic\",\n  \"description\": \"Light, blooming, romantic\", \"image_url\": \"https://res.cloudinary.com/…\"}]\n```\n\n`type`: `classic` | `premium` | `exotic` | `seasonal` | `niche`",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Home banners",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/app/banners/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "app",
+                "banners",
+                ""
+              ]
+            },
+            "description": "Banners that are live **today** (Home carousel). **Public**, not paginated.\n\n**Response `200`**\n```json\n[{\"id\": 1, \"title\": \"Summer Essence 2024\", \"image_url\": \"https://…\",\n  \"starts_on\": \"2026-09-12\", \"ends_on\": \"2026-09-27\"}]\n```",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Products (search, filter, sort)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/app/products/?",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "app",
+                "products",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "oud",
+                  "description": "Full-text over name, brand, notes, description, category",
+                  "disabled": true
+                },
+                {
+                  "key": "category",
+                  "value": "1",
+                  "description": "Category id",
+                  "disabled": true
+                },
+                {
+                  "key": "concentration",
+                  "value": "eau_de_parfum",
+                  "description": "eau_de_parfum | eau_de_toilette | extrait_de_parfum | cologne | perfume_oil | home_fragrance",
+                  "disabled": true
+                },
+                {
+                  "key": "brand",
+                  "value": "MAD PERFUME",
+                  "description": "Case-insensitive exact match",
+                  "disabled": true
+                },
+                {
+                  "key": "min_price",
+                  "value": "100",
+                  "description": "Minimum price",
+                  "disabled": true
+                },
+                {
+                  "key": "max_price",
+                  "value": "250",
+                  "description": "Maximum price",
+                  "disabled": true
+                },
+                {
+                  "key": "is_featured",
+                  "value": "true",
+                  "description": "Featured products only",
+                  "disabled": true
+                },
+                {
+                  "key": "ordering",
+                  "value": "-created_at",
+                  "description": "price | -price | -created_at | -sold | -rating",
+                  "disabled": true
+                },
+                {
+                  "key": "page",
+                  "value": "2",
+                  "description": "Page number (20 per page)",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Product listing. **Public**, but send the token when signed in so `is_saved` is correct.\n\n**Paginated.** 20 per page. Response: `{count, next, previous, results[]}`. Use `?page=2` for the next page; `next` is `null` on the last page.\n\n**Enable the query params you need** (they are disabled by default in Postman):\n\n| Param | Example | Notes |\n|---|---|---|\n| `search` | `oud` | name, brand, scent notes, description, category |\n| `category` | `7` | category id |\n| `concentration` | `eau_de_parfum` | see enum below |\n| `brand` | `MAD PERFUME` | case-insensitive exact |\n| `min_price` / `max_price` | `100` / `250` | |\n| `is_featured` | `true` | Featured Selection on Home |\n| `ordering` | `-created_at` | `price`, `-price`, `-created_at` (new arrivals, default), `-sold` (best sellers), `-rating` |\n| `page` | `2` | pagination |\n\n`concentration`: `eau_de_parfum`, `eau_de_toilette`, `extrait_de_parfum`, `cologne`, `perfume_oil`, `home_fragrance`\n\n**Item shape**\n```json\n{\n  \"id\": 9, \"name\": \"Alpine Mist\", \"brand\": \"MAD PERFUME\",\n  \"category\": 11, \"category_name\": \"Musk\", \"concentration\": \"extrait_de_parfum\",\n  \"size\": \"100ml\", \"notes\": [\"Oud\", \"Saffron\"], \"price\": \"160.00\",\n  \"image_url\": \"https://…\", \"rating\": 4.5, \"reviews_count\": 12,\n  \"is_saved\": false, \"in_stock\": true\n}\n```"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const d = pm.response.json();",
+                  "if (d.results && d.results.length) { pm.collectionVariables.set('product_id', d.results[0].id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Product detail",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/app/products/{{product_id}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "app",
+                "products",
+                "{{product_id}}",
+                ""
+              ]
+            },
+            "description": "Everything on the Product Details screen. **Public**.\n\nSame fields as the list item, plus:\n- `description`\n- `image_urls` — all images for the gallery\n- `branches` — `[{id, name, city}]` for \"Available at\"\n\n**Responses**\n- `200` product\n- `404` unknown id"
+          },
+          "response": []
+        },
+        {
+          "name": "Product reviews",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/app/products/{{product_id}}/reviews/?",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "app",
+                "products",
+                "{{product_id}}",
+                "reviews",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "2",
+                  "description": "Page number (20 per page)",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Reviews for one product. **Public**.\n\n**Paginated.** 20 per page. Response: `{count, next, previous, results[]}`. Use `?page=2` for the next page; `next` is `null` on the last page.\n\n**Item shape**\n```json\n{\"id\": 1, \"user_name\": \"Sophia Laurent\", \"rating\": 5,\n \"comment\": \"A masterpiece of balance.\", \"created_at\": \"2026-09-15T11:01:56Z\"}\n```\n\nThe average and total are on the product itself (`rating`, `reviews_count`).",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Write a review",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/app/products/{{product_id}}/reviews/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "app",
+                "products",
+                "{{product_id}}",
+                "reviews",
+                ""
+              ]
+            },
+            "description": "One review per product, and only for products in the user's **delivered** orders. Earns **+50 points**.\n\n**Body**\n- `rating` — 1..5 (required)\n- `comment` — optional\n\n**Responses**\n- `201` the review\n- `400` `{\"detail\": \"You can review products from your delivered orders.\"}`\n- `400` `{\"detail\": \"You have already reviewed this product.\"}`\n- `401` not signed in",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rating\": 5,\n  \"comment\": \"A masterpiece of balance.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Saved items",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/app/saved-products/?",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "app",
+                "saved-products",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "2",
+                  "description": "Page number (20 per page)",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "The user's saved (wishlist) products. **Paginated.** 20 per page. Response: `{count, next, previous, results[]}`. Use `?page=2` for the next page; `next` is `null` on the last page.\n\nItems use the **same shape as the product list**, with `is_saved: true`."
+          },
+          "response": []
+        },
+        {
+          "name": "Save a product",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/app/saved-products/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "app",
+                "saved-products",
+                ""
+              ]
+            },
+            "description": "Add to Saved Items (tapping the heart). Saving twice is harmless.\n\n**Responses**\n- `201` `{\"product\": 9}`\n- `400` unknown product id",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"product\": \"{{product_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Unsave a product",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/app/saved-products/{{product_id}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "app",
+                "saved-products",
+                "{{product_id}}",
+                ""
+              ]
+            },
+            "description": "Note the path uses the **product id**, not a separate saved-item id.\n\n**Responses**\n- `204` removed\n- `404` wasn't saved"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "4. Boutiques",
+      "description": "Branch locator: search, nearest-first, and branch detail.",
+      "item": [
+        {
+          "name": "Branches (search / nearest)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/app/branches/?",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "app",
+                "branches",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "paris",
+                  "description": "name, city, country or address",
+                  "disabled": true
+                },
+                {
+                  "key": "lat",
+                  "value": "48.86",
+                  "description": "Device latitude — use together with lng",
+                  "disabled": true
+                },
+                {
+                  "key": "lng",
+                  "value": "2.33",
+                  "description": "Device longitude — sorts nearest first",
+                  "disabled": true
+                },
+                {
+                  "key": "page",
+                  "value": "2",
+                  "description": "Page number (20 per page)",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Boutique locator. **Public**.\n\n**Paginated.** 20 per page. Response: `{count, next, previous, results[]}`. Use `?page=2` for the next page; `next` is `null` on the last page.\n\n**Query params**\n| Param | Example | Notes |\n|---|---|---|\n| `search` | `paris` | name, city, country, address |\n| `lat` + `lng` | `48.86` / `2.33` | sorts nearest first; branches without coordinates are excluded |\n| `page` | `2` | pagination |\n\nDefault order: flagship first, then by name.\n\n**Item shape**\n```json\n{\n  \"id\": 2, \"name\": \"Paris Flagship\", \"is_flagship\": true,\n  \"address\": \"75 Avenue des Champs-Élysées\", \"city\": \"Paris\", \"country\": \"France\",\n  \"phone\": \"+33 1 45 61 98 01\", \"email\": \"paris@madperfume.com\",\n  \"weekday_opens\": \"10:00:00\", \"weekday_closes\": \"21:00:00\",\n  \"sunday_opens\": \"11:00:00\", \"sunday_closes\": \"19:00:00\",\n  \"latitude\": \"48.871400\", \"longitude\": \"2.302000\", \"image_url\": \"https://…\"\n}\n```",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const d = pm.response.json();",
+                  "if (d.results && d.results.length) { pm.collectionVariables.set('branch_id', d.results[0].id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Branch detail",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/app/branches/{{branch_id}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "app",
+                "branches",
+                "{{branch_id}}",
+                ""
+              ]
+            },
+            "description": "Branch Details screen. **Public**. Same object as a list item.\n\n**Responses**\n- `200` branch\n- `404` unknown id",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "5. Cart",
+      "description": "Shopping bag: list, add (increments), change quantity, remove.",
+      "item": [
+        {
+          "name": "Get cart",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/app/cart/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "app",
+                "cart",
+                ""
+              ]
+            },
+            "description": "The Shopping Bag. **Not paginated.**\n\n**Response `200`**\n```json\n{\n  \"items\": [{\n    \"id\": 2, \"product\": 9, \"name\": \"Alpine Mist\",\n    \"category_name\": \"Musk\",\n    \"variant\": \"100ml / Extrait de Parfum\", \"price\": \"160.00\",\n    \"image_url\": \"https://…\", \"quantity\": 1, \"line_total\": \"160.00\"\n  }],\n  \"items_count\": 1,\n  \"subtotal\": \"160.00\"\n}\n```\n\n- `category_name` is the small collection label above the name.\n- `items_count` is the total quantity (for the tab badge).\n- Tax and shipping are added at checkout, not here."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const d = pm.response.json();",
+                  "if (d.items && d.items.length) { pm.collectionVariables.set('cart_item_id', d.items[0].id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Add to cart",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/app/cart/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "app",
+                "cart",
+                ""
+              ]
+            },
+            "description": "Adding a product that is already in the cart **increases** its quantity.\n\n**Body**\n- `product` — product id\n- `quantity` — defaults to 1\n\n**Responses**\n- `201` the cart item\n- `400` `{\"quantity\": [\"Only 3 left in stock.\"]}` (checked against what's already in the cart)",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"product\": \"{{product_id}}\",\n  \"quantity\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const d = pm.response.json();",
+                  "if (d.id) { pm.collectionVariables.set('cart_item_id', d.id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Change quantity",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/app/cart/{{cart_item_id}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "app",
+                "cart",
+                "{{cart_item_id}}",
+                ""
+              ]
+            },
+            "description": "Sets an absolute quantity (the − / + buttons).\n\n**Responses**\n- `200` the updated item with a new `line_total`\n- `400` `{\"quantity\": [\"Only 3 left in stock.\"]}`\n- `404` item belongs to someone else / removed",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantity\": 2\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Remove item",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/app/cart/{{cart_item_id}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "app",
+                "cart",
+                "{{cart_item_id}}",
+                ""
+              ]
+            },
+            "description": "REMOVE on a cart row.\n\n**Responses**\n- `204` removed\n- `404` already gone"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "6. Orders & Checkout",
+      "description": "Checkout with Idempotency-Key, order history and order tracking.",
+      "item": [
+        {
+          "name": "Place order (checkout)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}",
+                "description": "One UUID per checkout attempt; reuse it on retries"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/app/orders/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "app",
+                "orders",
+                ""
+              ]
+            },
+            "description": "Turns the whole cart into an order, reserves stock and empties the cart.\n\n### Headers\n- `Idempotency-Key` — **required in the app** (Postman fills it with a random UUID per send). Generate ONE uuid when the user taps *Place order* and reuse it for every retry of that same attempt.\n\n### Body\n| Field | Required | Notes |\n|---|---|---|\n| `shipping_name` | yes | |\n| `shipping_address` | yes | |\n| `shipping_city` | yes | |\n| `shipping_phone` | no | falls back to the profile phone |\n| `payment_method` | yes | `card` or `cod` |\n\n### Responses\n- `201` order created\n- `200` **same `Idempotency-Key` sent again** → the same order, no duplicate\n- `400` `{\"detail\": \"Your cart is empty.\"}`\n- `400` `{\"detail\": \"Alpine Mist: only 1 left in stock.\"}`\n\n`card` → `status: \"pending_payment\"` + `client_secret` for the Stripe sheet.\n`cod` → `status: \"processing\"`, `client_secret: null`, invoice emailed right away.\n\nThe response includes `number`, `status`, `items[]` (with `variant` and scent `notes`), `events[]`, `subtotal`, `tax` (8%), `shipping_fee`, `total`, `estimated_delivery`, and the shipping fields.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"shipping_name\": \"Sophia Laurent\",\n  \"shipping_address\": \"14 Rue de la Paix\",\n  \"shipping_city\": \"Paris\",\n  \"shipping_phone\": \"+33612345678\",\n  \"payment_method\": \"card\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const d = pm.response.json();",
+                  "if (d.id) { pm.collectionVariables.set('order_id', d.id); }",
+                  "if (d.client_secret) { pm.collectionVariables.set('client_secret', d.client_secret); }",
+                  "pm.test('order placed', () => pm.expect(pm.response.code).to.be.oneOf([200, 201]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Order history",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/app/orders/?",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "app",
+                "orders",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "2",
+                  "description": "Page number (20 per page)",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "The user's orders, newest first (Profile → Order History). **Paginated.** 20 per page. Response: `{count, next, previous, results[]}`. Use `?page=2` for the next page; `next` is `null` on the last page.\n\nEach item is the full order object (same as the detail), without `client_secret`.\n\nUse `status` for the badge: `pending_payment`, `paid`, `processing`, `shipped`, `delivered`, `cancelled`."
+          },
+          "response": []
+        },
+        {
+          "name": "Order detail / tracking",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/app/orders/{{order_id}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "app",
+                "orders",
+                "{{order_id}}",
+                ""
+              ]
+            },
+            "description": "Order Tracking screen.\n\n- `events[]` — the status timeline, **oldest first**: `[{\"status\": \"pending_payment\", \"created_at\": \"…\"}, {\"status\": \"paid\", …}]`\n- `estimated_delivery` — date, e.g. `\"2026-09-18\"`\n- `items[].notes` — scent tags, e.g. `[\"Oud\", \"Saffron\"]`\n- `card_last4` — for the Payment row\n\n**Responses**\n- `200` order\n- `404` unknown id **or the order belongs to another user**\n\n_Only the four status steps exist (Order Received → Processing → Shipped → Delivered). There is no courier \"shipping journey\" feed._"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "7. Payments (reference)",
+      "description": "How card payments complete. The Stripe webhook is server-to-server; the app only polls the order.",
+      "item": [
+        {
+          "name": "Stripe webhook (backend only)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/app/payments/stripe/webhook/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "app",
+                "payments",
+                "stripe",
+                "webhook",
+                ""
+              ]
+            },
+            "description": "**The app never calls this.** Stripe calls it server-to-server when a card payment succeeds; the backend then marks the order `paid` and emails the invoice.\n\nIt's here so you know how the order becomes `paid`:\n\n1. App: `POST /app/orders/` with `payment_method: \"card\"` → `client_secret`\n2. App: Stripe PaymentSheet with that `client_secret`\n3. Stripe → backend: `payment_intent.succeeded`\n4. App: poll `GET /app/orders/{id}/` until `status` is `paid`\n\nRequests without a valid Stripe signature get `400` — that's expected if you send this from Postman.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"note\": \"Sending this from Postman returns 400: no valid Stripe signature. This request is for reference only.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "8. Loyalty & Rewards",
+      "description": "Points summary, history with filters, rewards shop, redeeming and redeemed rewards.",
+      "item": [
+        {
+          "name": "Loyalty summary",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/app/loyalty/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "app",
+                "loyalty",
+                ""
+              ]
+            },
+            "description": "Everything on the Loyalty screen and the Earn Points screen.\n\n**Response `200`**\n```json\n{\n  \"points_balance\": 4478,\n  \"lifetime_points\": 4478,\n  \"tier\": \"gold\",\n  \"next_tier\": \"platinum\",\n  \"points_to_next_tier\": 3022,\n  \"tier_progress\": 39,\n  \"tiers\": {\"silver\": 0, \"gold\": 2500, \"platinum\": 7500, \"diamond\": 15000},\n  \"earn_rates\": {\"app\": 5, \"branch\": 3, \"review\": 50},\n  \"recent_activity\": [ … latest 5 transactions … ]\n}\n```\n\n- Tier comes from **lifetime** points; redeeming never lowers it.\n- At the top tier: `next_tier: null`, `points_to_next_tier: 0`, `tier_progress: 100`.\n- `earn_rates` drives the \"5X POINTS PER DOLLAR\" / \"3X\" copy."
+          },
+          "response": []
+        },
+        {
+          "name": "Points history",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/app/loyalty/transactions/?",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "app",
+                "loyalty",
+                "transactions",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "channel",
+                  "value": "app",
+                  "description": "app | branch",
+                  "disabled": true
+                },
+                {
+                  "key": "kind",
+                  "value": "earned",
+                  "description": "earned | redeemed",
+                  "disabled": true
+                },
+                {
+                  "key": "page",
+                  "value": "2",
+                  "description": "Page number (20 per page)",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Points History screen. **Paginated.** 20 per page. Response: `{count, next, previous, results[]}`. Use `?page=2` for the next page; `next` is `null` on the last page.\n\n**Filters** (match the chips on that screen)\n| Param | Values |\n|---|---|\n| `channel` | `app` (Mobile App) \\| `branch` (Physical Branch) |\n| `kind` | `earned` \\| `redeemed` |\n| `page` | page number |\n\n**Item shape**\n```json\n{\n  \"id\": 24, \"reference\": \"MAD-00035\",\n  \"title\": \"Purchase: Mobile App\", \"kind\": \"earned\", \"reason\": \"purchase\",\n  \"channel\": \"app\", \"branch_name\": null, \"purchase_amount\": \"345.60\",\n  \"points\": 1728, \"balance_after\": 1728, \"created_at\": \"2026-09-15T11:01:56Z\"\n}\n```\n\n`points` is **negative** for redemptions — show those in red. `reason`: `purchase` | `review` | `reward`."
+          },
+          "response": []
+        },
+        {
+          "name": "Rewards shop",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/app/rewards/?",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "app",
+                "rewards",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "category",
+                  "value": "experience",
+                  "description": "physical_product | experience | service",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Active rewards, cheapest first. **Not paginated.**\n\n**Filter:** `category` = `physical_product` | `experience` | `service`\n\n**Item shape**\n```json\n{\n  \"id\": 3, \"name\": \"$20 Voucher\", \"points_required\": 400,\n  \"category\": \"service\", \"eligibility\": \"all\",\n  \"description\": \"…\", \"image_url\": \"https://…\",\n  \"can_redeem\": true\n}\n```\n\n- `can_redeem` already combines **balance** and **tier**: use it to enable the Redeem button and the \"AVAILABLE TO REDEEM\" badge.\n- `eligibility` is a **minimum tier** (`all`, `gold`, `platinum`, `diamond`)."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const d = pm.response.json();",
+                  "if (Array.isArray(d) && d.length) { pm.collectionVariables.set('reward_id', d[0].id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reward detail",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/app/rewards/{{reward_id}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "app",
+                "rewards",
+                "{{reward_id}}",
+                ""
+              ]
+            },
+            "description": "Reward Details screen. Same object as a list item.\n\n**Responses**\n- `200` reward\n- `404` unknown or inactive reward"
+          },
+          "response": []
+        },
+        {
+          "name": "Redeem a reward",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/app/rewards/{{reward_id}}/redeem/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "app",
+                "rewards",
+                "{{reward_id}}",
+                "redeem",
+                ""
+              ]
+            },
+            "description": "**No body.** Deducts the points and issues a voucher.\n\n**Responses**\n- `201`\n```json\n{\n  \"id\": 31, \"voucher_code\": \"RD-00031\", \"reward\": 3,\n  \"name\": \"$20 Voucher\", \"image_url\": \"https://…\",\n  \"points\": 400, \"status\": \"processing\",\n  \"created_at\": \"2026-09-15T12:10:00Z\", \"fulfilled_at\": null\n}\n```\n- `400` `{\"detail\": \"This reward isn't available for your points or tier yet.\"}`\n\nShow `voucher_code` at a boutique to collect. A rewards notification is also added to the inbox."
+          },
+          "response": []
+        },
+        {
+          "name": "Redeemed rewards",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/app/redemptions/?",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "app",
+                "redemptions",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "2",
+                  "description": "Page number (20 per page)",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "\"Your Exclusive Collection\" list. **Paginated.** 20 per page. Response: `{count, next, previous, results[]}`. Use `?page=2` for the next page; `next` is `null` on the last page.\n\nSame shape as the redeem response.\n\n`status`: `processing` until the boutique hands it over, then `delivered` (with `fulfilled_at` set)."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "9. Notifications",
+      "description": "Inbox with category filters, unread badge, mark read / read all.",
+      "item": [
+        {
+          "name": "Inbox",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/app/notifications/?",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "app",
+                "notifications",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "category",
+                  "value": "offers",
+                  "description": "offers | rewards | orders",
+                  "disabled": true
+                },
+                {
+                  "key": "is_read",
+                  "value": "false",
+                  "description": "true | false",
+                  "disabled": true
+                },
+                {
+                  "key": "page",
+                  "value": "2",
+                  "description": "Page number (20 per page)",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Notifications screen. **Paginated.** 20 per page. Response: `{count, next, previous, results[]}`. Use `?page=2` for the next page; `next` is `null` on the last page. Newest first.\n\n**Filters**\n| Param | Values |\n|---|---|\n| `category` | `offers` (Offers & Curations) \\| `rewards` (Loyalty & Rewards) \\| `orders` (Order Status) |\n| `is_read` | `true` \\| `false` |\n| `page` | page number |\n\n**Item shape**\n```json\n{\n  \"id\": 13, \"category\": \"orders\",\n  \"title\": \"Order delivered\",\n  \"body\": \"Order MAD-00035 has been delivered.\",\n  \"order\": 35, \"order_number\": \"MAD-00035\",\n  \"is_read\": false, \"created_at\": \"2026-09-15T11:01:56Z\"\n}\n```\n\nWhen `order` is set, tapping the row should open Order Tracking for that order."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const d = pm.response.json();",
+                  "if (d.results && d.results.length) { pm.collectionVariables.set('notification_id', d.results[0].id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Unread count (badge)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/app/notifications/unread-count/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "app",
+                "notifications",
+                "unread-count",
+                ""
+              ]
+            },
+            "description": "For the bell badge.\n\n**Response `200`** `{\"unread\": 3}`"
+          },
+          "response": []
+        },
+        {
+          "name": "Mark one as read",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/app/notifications/{{notification_id}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "app",
+                "notifications",
+                "{{notification_id}}",
+                ""
+              ]
+            },
+            "description": "**Responses**\n- `200` the updated notification\n- `404` belongs to another user",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"is_read\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Mark all as read",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/app/notifications/read-all/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "app",
+                "notifications",
+                "read-all",
+                ""
+              ]
+            },
+            "description": "**No body.**\n\n**Responses**\n- `204` all marked read"
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://staging-api.bpmstudio.pt/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refresh_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "reset_uid",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "reset_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "product_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "branch_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "cart_item_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "order_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "reward_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "notification_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "device_token",
+      "value": "fcm-registration-token",
+      "type": "string"
+    },
+    {
+      "key": "client_secret",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}
