@@ -27,6 +27,7 @@ def product_image(product):
 class CartItemSerializer(serializers.ModelSerializer):
     product = serializers.PrimaryKeyRelatedField(queryset=Product.objects.all())
     name = serializers.CharField(source="product.name", read_only=True)
+    category_name = serializers.CharField(source="product.category.name", read_only=True)
     variant = serializers.SerializerMethodField()
     price = serializers.DecimalField(source="product.price", max_digits=10, decimal_places=2, read_only=True)
     image_url = serializers.SerializerMethodField()
@@ -34,7 +35,7 @@ class CartItemSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CartItem
-        fields = ["id", "product", "name", "variant", "price", "image_url", "quantity", "line_total"]
+        fields = ["id", "product", "name", "category_name", "variant", "price", "image_url", "quantity", "line_total"]
 
     def get_variant(self, item):
         return variant_label(item.product)
@@ -67,7 +68,7 @@ class CartViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, mixins.UpdateM
     http_method_names = ["get", "post", "patch", "delete"]
 
     def get_queryset(self):
-        return CartItem.objects.filter(user=self.request.user).select_related("product")
+        return CartItem.objects.filter(user=self.request.user).select_related("product__category")
 
     def list(self, request, *args, **kwargs):
         items = self.get_serializer(self.get_queryset(), many=True).data
@@ -96,10 +97,11 @@ class CheckoutSerializer(serializers.Serializer):
 
 class OrderItemSerializer(serializers.ModelSerializer):
     line_total = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+    notes = serializers.ListField(source="notes_list", read_only=True)
 
     class Meta:
         model = OrderItem
-        fields = ["product", "product_name", "variant", "image_url", "unit_price", "quantity", "line_total"]
+        fields = ["product", "product_name", "variant", "notes", "image_url", "unit_price", "quantity", "line_total"]
 
 
 class OrderEventSerializer(serializers.ModelSerializer):
@@ -188,7 +190,7 @@ class OrderViewSet(mixins.CreateModelMixin, viewsets.ReadOnlyModelViewSet):
             shipping_phone=data.get("shipping_phone") or user.phone, idempotency_key=idempotency_key,
         )
         OrderItem.objects.bulk_create(OrderItem(
-            order=order, product=i.product, product_name=i.product.name, variant=variant_label(i.product), sku=i.product.sku,
+            order=order, product=i.product, product_name=i.product.name, variant=variant_label(i.product), notes=i.product.notes, sku=i.product.sku,
             image_url=product_image(i.product), unit_price=i.product.price, quantity=i.quantity,
         ) for i in cart)
         for item in cart:
