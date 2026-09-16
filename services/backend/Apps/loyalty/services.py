@@ -45,7 +45,7 @@ def _apply(customer_id, **fields):
         if fields["points"] > 0:
             customer.lifetime_points += fields["points"]
         if (tier := tier_for(customer.lifetime_points)) != old_tier:
-            UserNotification.objects.create(
+            UserNotification.deliver(
                 user=customer, category="rewards", title=f"{tier.title()} Status Achievement",
                 body=f"Congratulations, you have reached {tier.title()} tier. New rewards are now unlocked.",
             )

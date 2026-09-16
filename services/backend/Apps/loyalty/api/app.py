@@ -115,7 +115,7 @@ class RewardViewSet(viewsets.ReadOnlyModelViewSet):
         if not loyalty.can_redeem(request.user, reward):
             raise serializers.ValidationError({"detail": "This reward isn't available for your points or tier yet."})
         entry = loyalty.redeem(request.user, reward, channel="app")
-        UserNotification.objects.create(
+        UserNotification.deliver(
             user=request.user, category=UserNotification.Category.REWARDS, title=f"{reward.name} redeemed",
             body=f"Present voucher {entry.reference} at any MAD boutique to collect your reward.",
         )

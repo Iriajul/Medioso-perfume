@@ -1,5 +1,11 @@
 from django.conf import settings
-from django.db import models
+from django.db import models, transaction
+
+
+def push_after_commit(notifications):
+    from Apps.notifications import push
+
+    transaction.on_commit(lambda: push.send(notifications))
 
 
 class Notification(models.Model):
@@ -51,3 +57,10 @@ class UserNotification(models.Model):
     class Meta:
         ordering = ["-created_at"]
         indexes = [models.Index(fields=["user", "-created_at"])]
+
+    @classmethod
+    def deliver(cls, **fields):
+        """Creates the inbox row and pushes it once the transaction commits."""
+        notification = cls.objects.create(**fields)
+        push_after_commit([notification])
+        return notification
