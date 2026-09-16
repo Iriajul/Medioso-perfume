@@ -274,7 +274,22 @@ Call after login and whenever the FCM token changes.
 
 Call on logout. `204`.
 
-> Push delivery goes live once Firebase credentials are added on the backend; registering tokens now is safe.
+**Push is live.** Firebase is configured on the backend (project `mad-perfume`), so every notification below is also delivered as a push to the customer's registered devices. Your side still needs:
+
+- **Android:** `google-services.json` in the app.
+- **iOS:** `GoogleService-Info.plist`, plus an **APNs authentication key** uploaded in Firebase — without it, iPhone push fails silently. Test on a real device; the simulator does not receive push.
+- Request notification permission, then POST the token here. Send `DELETE /app/devices/{token}/` on logout.
+
+**Payload the app receives**
+
+```json
+{
+  "notification": { "title": "Order delivered", "body": "Order MAD-00035 has been delivered." },
+  "data": { "notification_id": "13", "category": "orders", "order_id": "35" }
+}
+```
+
+Use `data.category` to decide where to navigate; when `order_id` is set, open Order Tracking for that order. Tokens the backend cannot deliver to (app uninstalled) are deleted automatically, so no cleanup is needed on your side.
 
 ---
 
@@ -906,8 +921,9 @@ Filters: `?category=offers|rewards|orders`, `?is_read=false`. Newest first.
 - **Tapping:** when `order` is set, tapping opens Order Tracking for that order.
 - **Sources:**
   - `offers`: broadcasts from the admin.
-  - `rewards`: new tier reached, reward redeemed.
+  - `rewards`: new tier reached, reward redeemed, voucher collected in a boutique.
   - `orders`: every status change.
+- **Push:** each of these is also sent as a push notification (section 4), unless the customer switched that category off in their Preference Center (`push_enabled`, `notify_collections`, `notify_rewards`, `notify_orders`). The inbox always receives it regardless.
 
 ### Unread badge — `GET /app/notifications/unread-count/`
 
@@ -931,4 +947,4 @@ Filters: `?category=offers|rewards|orders`, `?is_read=false`. Newest first.
 
 - **Shipping Journey (courier steps):** not part of the backend. The Order Tracking screen's courier timeline ("Arrived at Courier Sort Facility"…) has no data source — the admin dashboard doesn't track couriers. Build the tracking screen from `events` (the status circles) only and leave that section out.
 - **Not built yet:** Google / Apple sign-in, favourite boutiques, courier step-by-step shipment tracking, product text in Arabic/Hebrew (content is currently single-language).
-- **Push notifications:** the inbox works now; register device tokens (section 4) so push works as soon as Firebase is configured.
+- **Push notifications:** working. Register device tokens (section 4) and add the Firebase/APNs files to the app.
